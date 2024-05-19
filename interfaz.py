@@ -51,12 +51,13 @@ class GeneticAlgorithmUI:
     def save_data(self):
         data_values = [var.get() for _, var in self.fields]
         problema_value = self.combobox_var.get()
-        
+
         try:
             data = DataInfo(*data_values, problema_value)
             algoritmo_genetico(data)
         except ValueError as e:
             print(f"Error: {e}")
+
 
     def center_window(self):
         self.root.update()

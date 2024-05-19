@@ -9,6 +9,7 @@ from dna import DNA
 
 class Individuo:
     identificador = 0
+
     def __init__(self, binario, i, x, y):
         Individuo.identificador += 1
         self.id = Individuo.identificador
@@ -16,6 +17,7 @@ class Individuo:
         self.i = i
         self.x = round(x, 4)
         self.y = round(y, 4)
+
     def __str__(self):
         return f"id: {self.id}, i: {self.i}, num.binario: {self.binario}, posición en X: {self.x}, posición en Y: {self.y}"
 
@@ -43,29 +45,31 @@ def calcular_x(num_generado):
     return valor_x
 
 def primerPoblacion():
+    DNA.poblacionGeneral.clear()
     for i in range(DNA.poblacionInicial):
-        num_generado = (random.randint(1, DNA.numeroRango))
-        num_generado_binario = (bin(num_generado)[2:]).zfill(DNA.numeroBits)
+        num_generado = random.randint(0, DNA.numeroRango)
+        num_generado_binario = bin(num_generado)[2:].zfill(DNA.numeroBits)
         valor_x = calcular_x(num_generado)
         valor_y = calcular_funcion(DNA.formula, valor_x)
-        individuo = Individuo(i=num_generado, binario=num_generado_binario, x=valor_x, y= valor_y)
+        individuo = Individuo(binario=num_generado_binario, i=num_generado, x=valor_x, y=valor_y)
         DNA.poblacionGeneral.append(individuo)
+
+    # Verificación adicional
+    if len(DNA.poblacionGeneral) < 2:
+        raise ValueError("La población inicial no tiene suficientes individuos.")
 
 def calcular_funcion(funcion, valor_x):
     x = symbols('x')
     expresion = lambdify(x, funcion, 'numpy')
-    resultado = expresion(valor_x)
-    return resultado
+    return expresion(valor_x)
 
 def calculoDatos():
     DNA.rango = DNA.limiteSuperior - DNA.limiteInferior
-    saltos = DNA.rango / DNA.resolucion
-    puntos = saltos + 1
-    numeroBits = math.log2(puntos)
-    numeroBits = math.ceil(numeroBits)
-    DNA.delta = DNA.rango / ((2 ** numeroBits) - 1)
-    DNA.numeroRango = 2 ** numeroBits  
-    DNA.numeroBits = numeroBits
+    puntos = DNA.resolucion + 1
+    DNA.numeroBits = math.ceil(math.log2(puntos))
+    DNA.delta = DNA.rango / (2 ** DNA.numeroBits - 1)
+    DNA.numeroRango = 2 ** DNA.numeroBits - 1
+
 
 def algoritmo_genetico(data):
     DNA.poblacionInicial = int(data.pob_inicial)
@@ -105,21 +109,30 @@ def inicializar(generacion):
 
 def optimizar():
     bandera = True
-    if DNA.tipoProblema == "Minimizacion":
+    if DNA.tipoProblema == "minimización":
         bandera = False
     ordenIndividuos = sorted(DNA.poblacionGeneral, key=lambda x: x.y, reverse=bandera)
-    
-    mitad = int(len(ordenIndividuos) / 2)
+
+    # Verificar que hay suficientes individuos para dividir en mitades
+    if len(ordenIndividuos) < 2:
+        raise ValueError("La población no tiene suficientes individuos para optimizar.")
+
+    mitad = len(ordenIndividuos) // 2
     mejor_aptitud = ordenIndividuos[:mitad] 
     menor_aptitud = ordenIndividuos[mitad:]
     
     resto_poblacion = []
     for individuo in menor_aptitud:
         resto_poblacion.append(individuo)
-        
+
+    # Asegurarse de que mejor_aptitud y resto_poblacion no están vacíos
+    if not mejor_aptitud or not resto_poblacion:
+        raise ValueError("No se pudo dividir la población correctamente en mitades.")
+
     emparejar(resto_poblacion, mejor_aptitud)
-    
+
     return mejor_aptitud[0], resto_poblacion[-1]
+
 
 def emparejar(resto_poblacion, mejor_aptitud):
     new_poblation = []
