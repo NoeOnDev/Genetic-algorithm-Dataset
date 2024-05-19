@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sympy import symbols, lambdify
 
-from algoritmo_genetico import DNA
+from dna import DNA
 
 def ordenar_por_generacion(filename):
     return int(filename.split('_')[-1].split('.')[0])
