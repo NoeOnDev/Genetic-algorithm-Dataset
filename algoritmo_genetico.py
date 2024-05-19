@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 
-
 class DNA:
     delta = 0
     numeroBits = 1
@@ -329,4 +328,4 @@ def podar():
     
     print("Población después de la poda:")
     for individuo in DNA.poblacionGeneral:
-        print(individuo) 
+        print(individuo)

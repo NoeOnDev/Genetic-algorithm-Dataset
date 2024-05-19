@@ -37,7 +37,6 @@ def save_data():
     data = DataInfo(p_inicial_value, p_max_value, resolucion_value, lim_inf_value, lim_sup_value, mut_ind_value, mut_gen_value, num_generaciones_value, problema_value)
     algoritmo_genetico(data)        
 
-
 pob_inicial = StringVar()
 ttk.Label(mainframe, text="Poblacion inicial:").grid(column=1, row=1)
 ttk.Spinbox(mainframe, textvariable=pob_inicial).grid(column=3, row=1) 
@@ -46,26 +45,21 @@ pob_max = StringVar()
 ttk.Label(mainframe, text="Poblacion maxima:").grid(column=1, row=2)
 ttk.Spinbox(mainframe, textvariable=pob_max).grid(column=3, row=2)
 
-
 lim_inf = StringVar()
 ttk.Label(mainframe, text="Limite inferior:").grid(column=1, row=3)
 ttk.Spinbox(mainframe, textvariable=lim_inf).grid(column=3, row=3)
-
 
 lim_sup = StringVar()
 ttk.Label(mainframe, text="Limite superior:").grid(column=1, row=4)
 ttk.Spinbox(mainframe, textvariable=lim_sup).grid(column=3, row=4)
 
-
 resolucion = StringVar()
 ttk.Label(mainframe, text="Resolucion:").grid(column=1, row=5)
 ttk.Spinbox(mainframe, textvariable=resolucion).grid(column=3, row=5)
 
-
 num_generaciones = StringVar()
 ttk.Label(mainframe, text="Generaciones:").grid(column=1, row=6)
 ttk.Spinbox(mainframe, textvariable=num_generaciones).grid(column=3, row=6)
-
 
 mut_gen = StringVar()
 ttk.Label(mainframe, text="P. mutación del gen:").grid(column=1, row=7)
@@ -74,8 +68,6 @@ ttk.Spinbox(mainframe, textvariable=mut_gen).grid(column=3, row=7)
 mut_ind = StringVar()
 ttk.Label(mainframe, text="P. mutación del individuo:").grid(column=1, row=8)
 ttk.Spinbox(mainframe, textvariable=mut_ind).grid(column=3, row=8)
-
-
 
 ttk.Label(mainframe, text="selecciones uno:").grid(column=1, row=10, sticky=W)
 combobox_var = StringVar(value="Minimizacion")
