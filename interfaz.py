@@ -1,3 +1,5 @@
+# Description: Este archivo contiene la interfaz gráfica del algoritmo genético.
+
 from tkinter import *
 from tkinter import ttk
 from algoritmo_genetico import algoritmo_genetico
