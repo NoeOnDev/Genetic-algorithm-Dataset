@@ -51,8 +51,12 @@ class GeneticAlgorithmUI:
     def save_data(self):
         data_values = [var.get() for _, var in self.fields]
         problema_value = self.combobox_var.get()
-        data = DataInfo(*data_values, problema_value)
-        algoritmo_genetico(data)
+        
+        try:
+            data = DataInfo(*data_values, problema_value)
+            algoritmo_genetico(data)
+        except ValueError as e:
+            print(f"Error: {e}")
 
     def center_window(self):
         self.root.update()
@@ -66,15 +70,18 @@ class GeneticAlgorithmUI:
 
 class DataInfo:
     def __init__(self, pob_inicial, pob_max, lim_inf, lim_sup, resolucion, num_generaciones, mut_gen, mut_ind, problema):
-        self.pob_inicial = pob_inicial
-        self.pob_max = pob_max
-        self.resolucion = resolucion
-        self.lim_inf = lim_inf
-        self.lim_sup = lim_sup
-        self.mut_ind = mut_ind
-        self.mut_gen = mut_gen
-        self.num_generaciones = num_generaciones
-        self.problema = problema
+        self.pob_inicial = int(pob_inicial)
+        self.pob_max = int(pob_max)
+        self.resolucion = float(resolucion)
+        self.lim_inf = float(lim_inf)
+        self.lim_sup = float(lim_sup)
+        self.mut_ind = float(mut_ind)
+        self.mut_gen = float(mut_gen)
+        self.num_generaciones = int(num_generaciones)
+        self.problema = problema.lower()
+
+        if self.lim_inf >= self.lim_sup:
+            raise ValueError("El límite inferior debe ser menor que el límite superior")
 
 if __name__ == "__main__":
     root = Tk()
