@@ -161,7 +161,7 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
         
         # Crear y guardar la gráfica de la generación
         values = [binary_to_decimal(ind, x_min, x_max) for ind in combined_population]
-        worst_value = binary_to_decimal(combined_population[np.argmin(combined_fitness)], x_min, x_max)
+        worst_value = binary_to_decimal(combined_population[np.argmin(combined_fitness) if maximize else np.argmax(combined_fitness)], x_min, x_max)
 
         # Evaluar la función objetivo en los valores
         objective_values = [f(val) for val in values]
