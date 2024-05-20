@@ -6,6 +6,7 @@ import cv2
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+import pandas as pd
 
 # Crear carpetas si no existen
 if not os.path.exists('generation_plots'):
@@ -214,8 +215,37 @@ def run_algorithm():
         result_label.config(text=f'Mejor solución: x = {best_solution}, f(x) = {final_fitness[best_index]}')
 
         create_video_from_images('generation_plots', 'statistics_plots/generation_evolution.avi')
+        
+        # Guardar los resultados en un archivo CSV
+        results_df = pd.DataFrame({
+            'Individuo': final_population,
+            'Valor del índice': range(len(final_population)),
+            'Valor de x': [binary_to_decimal(ind, x_min, x_max) for ind in final_population],
+            'Aptitud': final_fitness
+        })
+        results_df.to_csv('results.csv', index=False)
+
+        # Mostrar la tabla en una ventana de la interfaz gráfica
+        show_results_table(results_df)
+
     except ValueError as e:
         messagebox.showerror("Error de entrada", f"Por favor, ingrese valores válidos.\n\nDetalles del error: {e}")
+
+# Mostrar la tabla de resultados en una ventana de la interfaz gráfica
+def show_results_table(results_df):
+    results_window = tk.Toplevel(root)
+    results_window.title("Resultados")
+
+    table = ttk.Treeview(results_window, columns=('Individuo', 'Valor del índice', 'Valor de x', 'Aptitud'), show='headings')
+    table.heading('Individuo', text='Individuo')
+    table.heading('Valor del índice', text='Valor del índice')
+    table.heading('Valor de x', text='Valor de x')
+    table.heading('Aptitud', text='Aptitud')
+
+    for _, row in results_df.iterrows():
+        table.insert('', 'end', values=(row['Individuo'], row['Valor del índice'], row['Valor de x'], row['Aptitud']))
+
+    table.pack(expand=True, fill='both')
 
 # Configuración de la interfaz gráfica
 root = tk.Tk()
