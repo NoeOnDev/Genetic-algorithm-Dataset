@@ -1,7 +1,4 @@
-video_output
-stats_plots
-generation_plots
 __pycache__
-statistics_plots
-results.csv
-best_individuals.csv
+graficas_estadisticas
+graficas_generacion
+mejores_individuos.csv
