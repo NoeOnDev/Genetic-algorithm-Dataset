@@ -3,6 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import os
 import cv2
+import pandas as pd
 
 # Crear carpetas si no existen
 if not os.path.exists('generation_plots'):
@@ -108,6 +109,9 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
     avg_fitnesses = []
     worst_fitnesses = []
     
+    # Lista para guardar información del mejor individuo
+    best_individuals_info = []
+    
     for generation in range(generations):
         new_population = []
         pairs = form_pairs(population)
@@ -126,16 +130,29 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
         
         # Guardar estadísticos de la población
         if maximize:
-            best_individual = combined_population[np.argmax(combined_fitness)]
+            best_index = np.argmax(combined_fitness)
             best_fitness = np.max(combined_fitness)
+            worst_fitness = np.min(combined_fitness)
         else:
-            best_individual = combined_population[np.argmin(combined_fitness)]
+            best_index = np.argmin(combined_fitness)
             best_fitness = np.min(combined_fitness)
+            worst_fitness = np.max(combined_fitness)
         
         avg_fitness = np.mean(combined_fitness)
-        worst_fitness = np.min(combined_fitness) if maximize else np.max(combined_fitness)
         
-        print(f'Generation {generation}: Best Individual = {binary_to_decimal(best_individual, x_min, x_max)} Fitness = {best_fitness}')
+        best_individual = combined_population[best_index]
+        best_value = binary_to_decimal(best_individual, x_min, x_max)
+        
+        print(f'Generation {generation}: Best Individual = {best_value} Fitness = {best_fitness}')
+        
+        # Guardar información del mejor individuo
+        best_individuals_info.append({
+            'Generación': generation,
+            'Individuo': best_individual,
+            'Valor del índice': best_index,
+            'Valor de x': best_value,
+            'Aptitud': best_fitness
+        })
         
         # Guardar los estadísticos en las listas
         best_fitnesses.append(best_fitness)
@@ -144,7 +161,6 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
         
         # Crear y guardar la gráfica de la generación
         values = [binary_to_decimal(ind, x_min, x_max) for ind in combined_population]
-        best_value = binary_to_decimal(best_individual, x_min, x_max)
         worst_value = binary_to_decimal(combined_population[np.argmin(combined_fitness)], x_min, x_max)
 
         # Evaluar la función objetivo en los valores
@@ -162,7 +178,6 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
         plt.savefig(f'generation_plots/generation_{generation}.png')
         plt.close()
 
-        
         # Poda de la población
         population, fitness = prune_population(combined_population, combined_fitness, population_size, maximize)
     
@@ -177,6 +192,12 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
     plt.legend()
     plt.savefig('statistics_plots/statistics.png')
     plt.close()
+    
+    # Convertir la lista de mejores individuos a un DataFrame
+    best_individuals_df = pd.DataFrame(best_individuals_info)
+    
+    # Guardar el DataFrame en un archivo CSV
+    best_individuals_df.to_csv('best_individuals.csv', index=False)
     
     return population, fitness
 

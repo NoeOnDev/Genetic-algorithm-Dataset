@@ -4,3 +4,4 @@ generation_plots
 __pycache__
 statistics_plots
 results.csv
+best_individuals.csv

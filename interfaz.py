@@ -23,17 +23,11 @@ def run_algorithm():
 
         create_video_from_images('generation_plots', 'statistics_plots/generation_evolution.avi')
         
-        # Guardar los resultados en un archivo CSV
-        results_df = pd.DataFrame({
-            'Individuo': final_population,
-            'Valor del índice': range(len(final_population)),
-            'Valor de x': [binary_to_decimal(ind, x_min, x_max) for ind in final_population],
-            'Aptitud': final_fitness
-        })
-        results_df.to_csv('results.csv', index=False)
+        # Cargar los resultados del mejor individuo
+        best_individuals_df = pd.read_csv('best_individuals.csv')
 
         # Mostrar la tabla en una ventana de la interfaz gráfica
-        show_results_table(results_df)
+        show_results_table(best_individuals_df)
 
     except ValueError as e:
         messagebox.showerror("Error de entrada", f"Por favor, ingrese valores válidos.\n\nDetalles del error: {e}")
@@ -42,14 +36,15 @@ def show_results_table(results_df):
     results_window = tk.Toplevel(root)
     results_window.title("Resultados")
 
-    table = ttk.Treeview(results_window, columns=('Individuo', 'Valor del índice', 'Valor de x', 'Aptitud'), show='headings')
+    table = ttk.Treeview(results_window, columns=('Generación', 'Individuo', 'Valor del índice', 'Valor de x', 'Aptitud'), show='headings')
+    table.heading('Generación', text='Generación')
     table.heading('Individuo', text='Individuo')
     table.heading('Valor del índice', text='Valor del índice')
     table.heading('Valor de x', text='Valor de x')
     table.heading('Aptitud', text='Aptitud')
 
     for _, row in results_df.iterrows():
-        table.insert('', 'end', values=(row['Individuo'], row['Valor del índice'], row['Valor de x'], row['Aptitud']))
+        table.insert('', 'end', values=(row['Generación'], row['Individuo'], row['Valor del índice'], row['Valor de x'], row['Aptitud']))
 
     table.pack(expand=True, fill='both')
 
@@ -88,8 +83,6 @@ entry_chromosome_length.grid(row=6, column=1, padx=10, pady=5)
 ttk.Label(root, text="Maximización:").grid(row=7, column=0, padx=10, pady=5)
 var_maximize = tk.IntVar()
 ttk.Checkbutton(root, variable=var_maximize).grid(row=7, column=1, padx=10, pady=5)
-
-print(entry_chromosome_length, entry_x_max, entry_x_min, entry_mutation_prob_gene, entry_mutation_prob_individual, entry_population_size, entry_generations)
 
 ttk.Button(root, text="Ejecutar", command=run_algorithm).grid(row=8, column=0, columnspan=2, pady=10)
 
