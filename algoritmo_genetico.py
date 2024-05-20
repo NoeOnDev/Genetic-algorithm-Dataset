@@ -154,7 +154,6 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
             'Aptitud': best_fitness
         })
         
-        # Guardar los estadísticos en las listas
         best_fitnesses.append(best_fitness)
         avg_fitnesses.append(avg_fitness)
         worst_fitnesses.append(worst_fitness)
@@ -163,7 +162,6 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
         values = [binary_to_decimal(ind, x_min, x_max) for ind in combined_population]
         worst_value = binary_to_decimal(combined_population[np.argmin(combined_fitness) if maximize else np.argmax(combined_fitness)], x_min, x_max)
 
-        # Evaluar la función objetivo en los valores
         objective_values = [f(val) for val in values]
 
         plt.figure()
@@ -183,9 +181,9 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
     
     # Crear y guardar la gráfica de los estadísticos
     plt.figure()
-    plt.plot(best_fitnesses, label='Best')
-    plt.plot(avg_fitnesses, label='Average')
-    plt.plot(worst_fitnesses, label='Worst')
+    plt.plot(best_fitnesses, label='Mejor Fitness')
+    plt.plot(avg_fitnesses, label='Promedio')
+    plt.plot(worst_fitnesses, label='Peor Fitness')
     plt.title('Fitness Statistics')
     plt.xlabel('Generation')
     plt.ylabel('Fitness')
@@ -193,15 +191,11 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
     plt.savefig('statistics_plots/statistics.png')
     plt.close()
     
-    # Convertir la lista de mejores individuos a un DataFrame
     best_individuals_df = pd.DataFrame(best_individuals_info)
-    
-    # Guardar el DataFrame en un archivo CSV
     best_individuals_df.to_csv('best_individuals.csv', index=False)
     
     return population, fitness
 
-# Función para crear un video a partir de las imágenes generadas
 def create_video_from_images(image_folder, output_video):
     images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
     images.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
