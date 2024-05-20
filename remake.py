@@ -2,7 +2,12 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import os
+import cv2
+import tkinter as tk
+from tkinter import ttk
+from tkinter import messagebox
 
+# Crear carpetas si no existen
 if not os.path.exists('generation_plots'):
     os.makedirs('generation_plots')
 if not os.path.exists('statistics_plots'):
@@ -15,19 +20,21 @@ def f(x):
 # Convertir binario a decimal
 def binary_to_decimal(binary_str, x_min, x_max):
     decimal = int(binary_str, 2)
-    return x_min + (decimal / (2**16 - 1)) * (x_max - x_min)
+    max_value = 2**len(binary_str) - 1
+    return x_min + (decimal / max_value) * (x_max - x_min)
 
 # Convertir decimal a binario
-def decimal_to_binary(value, x_min, x_max):
-    normalized = int((value - x_min) / (x_max - x_min) * (2**16 - 1))
-    return f'{normalized:016b}'
+def decimal_to_binary(value, x_min, x_max, chromosome_length):
+    max_value = 2**chromosome_length - 1
+    normalized = int((value - x_min) / (x_max - x_min) * max_value)
+    return f'{normalized:0{chromosome_length}b}'
 
 # Inicialización de la población
-def initialize_population(size, x_min, x_max):
+def initialize_population(size, x_min, x_max, chromosome_length):
     population = []
     for _ in range(size):
         value = random.uniform(x_min, x_max)
-        binary_str = decimal_to_binary(value, x_min, x_max)
+        binary_str = decimal_to_binary(value, x_min, x_max, chromosome_length)
         population.append(binary_str)
     return population
 
@@ -74,12 +81,15 @@ def mutate(individual, mutation_prob_individual, mutation_prob_gene):
     return individual
 
 # Poda (Estrategia P2)
-def prune_population(population, fitness, size):
+def prune_population(population, fitness, size, maximize):
     unique_population, unique_indices = np.unique(population, return_index=True)
     unique_fitness = fitness[unique_indices]
     
     if len(unique_population) > size:
-        sorted_indices = np.argsort(-unique_fitness)
+        if maximize:
+            sorted_indices = np.argsort(-unique_fitness)
+        else:
+            sorted_indices = np.argsort(unique_fitness)
         pruned_population = unique_population[sorted_indices][:size]
         pruned_fitness = unique_fitness[sorted_indices][:size]
     else:
@@ -89,8 +99,11 @@ def prune_population(population, fitness, size):
     return pruned_population, pruned_fitness
 
 # Bucle de optimización
-def genetic_algorithm(population_size, generations, mutation_prob_individual, mutation_prob_gene, x_min, x_max):
-    population = initialize_population(population_size, x_min, x_max)
+def genetic_algorithm(population_size, generations, mutation_prob_individual, mutation_prob_gene, x_min, x_max, chromosome_proportion, maximize):
+    max_chromosome_length = 20  # Longitud máxima del cromosoma (puede ajustarse según sea necesario)
+    chromosome_length = int(chromosome_proportion * max_chromosome_length)
+    
+    population = initialize_population(population_size, x_min, x_max, chromosome_length)
     fitness = evaluate_population(population, x_min, x_max)
     
     # Listas para guardar los estadísticos
@@ -115,10 +128,15 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
         combined_fitness = np.concatenate((fitness, new_fitness))
         
         # Guardar estadísticos de la población
-        best_individual = combined_population[np.argmax(combined_fitness)]
-        best_fitness = np.max(combined_fitness)
+        if maximize:
+            best_individual = combined_population[np.argmax(combined_fitness)]
+            best_fitness = np.max(combined_fitness)
+        else:
+            best_individual = combined_population[np.argmin(combined_fitness)]
+            best_fitness = np.min(combined_fitness)
+        
         avg_fitness = np.mean(combined_fitness)
-        worst_fitness = np.min(combined_fitness)
+        worst_fitness = np.min(combined_fitness) if maximize else np.max(combined_fitness)
         
         print(f'Generation {generation}: Best Individual = {binary_to_decimal(best_individual, x_min, x_max)} Fitness = {best_fitness}')
         
@@ -129,16 +147,23 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
         
         # Crear y guardar la gráfica de la generación
         values = [binary_to_decimal(ind, x_min, x_max) for ind in combined_population]
+        best_value = binary_to_decimal(best_individual, x_min, x_max)
+        worst_value = binary_to_decimal(combined_population[np.argmin(combined_fitness)], x_min, x_max)
+        
         frequencies, bin_edges = np.histogram(values, bins=20)
         plt.figure()
-        plt.plot(bin_edges[:-1], frequencies)
+        plt.plot(bin_edges[:-1], frequencies, label='Histogram')
+        plt.scatter([best_value], [0], color='red', label='Best', zorder=5)
+        plt.scatter([worst_value], [0], color='blue', label='Worst', zorder=5)
+        plt.scatter(values, np.zeros_like(values), color='green', label='Population', zorder=5, alpha=0.6)
         plt.title(f'Generation {generation}')
         plt.xlabel('x')
         plt.ylabel('Frequency')
+        plt.legend()
         plt.savefig(f'generation_plots/generation_{generation}.png')
         plt.close()
         
-        population, fitness = prune_population(combined_population, combined_fitness, population_size)
+        population, fitness = prune_population(combined_population, combined_fitness, population_size, maximize)
     
     # Crear y guardar la gráfica de los estadísticos
     plt.figure()
@@ -154,15 +179,86 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
     
     return population, fitness
 
-population_size = int(input("Tamaño de la población: "))
-generations = int(input("Número de generaciones: "))
-mutation_prob_individual = float(input("Probabilidad de mutación del individuo: "))
-mutation_prob_gene = float(input("Probabilidad de mutación del gen: "))
-x_min = float(input("Valor mínimo de x: "))
-x_max = float(input("Valor máximo de x: "))
+# Función para crear un video a partir de las imágenes generadas
+def create_video_from_images(image_folder, output_video):
+    images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
+    images.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
+    
+    frame = cv2.imread(os.path.join(image_folder, images[0]))
+    height, width, layers = frame.shape
+    
+    video = cv2.VideoWriter(output_video, cv2.VideoWriter_fourcc(*'DIVX'), 1, (width, height))
+    
+    for image in images:
+        video.write(cv2.imread(os.path.join(image_folder, image)))
+    
+    cv2.destroyAllWindows()
+    video.release()
 
-final_population, final_fitness = genetic_algorithm(population_size, generations, mutation_prob_individual, mutation_prob_gene, x_min, x_max)
+# Interfaz gráfica
+def run_algorithm():
+    try:
+        population_size = int(entry_population_size.get())
+        generations = int(entry_generations.get())
+        mutation_prob_individual = float(entry_mutation_prob_individual.get())
+        mutation_prob_gene = float(entry_mutation_prob_gene.get())
+        x_min = float(entry_x_min.get())
+        x_max = float(entry_x_max.get())
+        chromosome_proportion = float(entry_chromosome_length.get())  # Interpreta como proporción
+        maximize = var_maximize.get() == 1
 
-best_index = np.argmax(final_fitness)
-best_solution = binary_to_decimal(final_population[best_index], x_min, x_max)
-print(f'Mejor solución encontrada: x = {best_solution}, f(x) = {final_fitness[best_index]}')
+        final_population, final_fitness = genetic_algorithm(population_size, generations, mutation_prob_individual, mutation_prob_gene, x_min, x_max, chromosome_proportion, maximize)
+
+        best_index = np.argmax(final_fitness) if maximize else np.argmin(final_fitness)
+        best_solution = binary_to_decimal(final_population[best_index], x_min, x_max)
+        result_label.config(text=f'Mejor solución: x = {best_solution}, f(x) = {final_fitness[best_index]}')
+
+        create_video_from_images('generation_plots', 'statistics_plots/generation_evolution.avi')
+    except ValueError as e:
+        messagebox.showerror("Error de entrada", f"Por favor, ingrese valores válidos.\n\nDetalles del error: {e}")
+
+# Configuración de la interfaz gráfica
+root = tk.Tk()
+root.title("Algoritmo Genético")
+
+# Parámetros de entrada
+ttk.Label(root, text="Tamaño de la población:").grid(row=0, column=0, padx=10, pady=5)
+entry_population_size = ttk.Entry(root)
+entry_population_size.grid(row=0, column=1, padx=10, pady=5)
+
+ttk.Label(root, text="Número de generaciones:").grid(row=1, column=0, padx=10, pady=5)
+entry_generations = ttk.Entry(root)
+entry_generations.grid(row=1, column=1, padx=10, pady=5)
+
+ttk.Label(root, text="Probabilidad de mutación del individuo:").grid(row=2, column=0, padx=10, pady=5)
+entry_mutation_prob_individual = ttk.Entry(root)
+entry_mutation_prob_individual.grid(row=2, column=1, padx=10, pady=5)
+
+ttk.Label(root, text="Probabilidad de mutación del gen:").grid(row=3, column=0, padx=10, pady=5)
+entry_mutation_prob_gene = ttk.Entry(root)
+entry_mutation_prob_gene.grid(row=3, column=1, padx=10, pady=5)
+
+ttk.Label(root, text="Valor mínimo de x:").grid(row=4, column=0, padx=10, pady=5)
+entry_x_min = ttk.Entry(root)
+entry_x_min.grid(row=4, column=1, padx=10, pady=5)
+
+ttk.Label(root, text="Valor máximo de x:").grid(row=5, column=0, padx=10, pady=5)
+entry_x_max = ttk.Entry(root)
+entry_x_max.grid(row=5, column=1, padx=10, pady=5)
+
+ttk.Label(root, text="Longitud del cromosoma (proporción):").grid(row=6, column=0, padx=10, pady=5)
+entry_chromosome_length = ttk.Entry(root)
+entry_chromosome_length.grid(row=6, column=1, padx=10, pady=5)
+
+ttk.Label(root, text="Maximización:").grid(row=7, column=0, padx=10, pady=5)
+var_maximize = tk.IntVar()
+ttk.Checkbutton(root, variable=var_maximize).grid(row=7, column=1, padx=10, pady=5)
+
+# Botón para ejecutar el algoritmo
+ttk.Button(root, text="Ejecutar", command=run_algorithm).grid(row=8, column=0, columnspan=2, pady=10)
+
+# Etiqueta para mostrar el resultado
+result_label = ttk.Label(root, text="")
+result_label.grid(row=9, column=0, columnspan=2, pady=10)
+
+root.mainloop()
