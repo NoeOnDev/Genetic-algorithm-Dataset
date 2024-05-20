@@ -146,19 +146,22 @@ def genetic_algorithm(population_size, generations, mutation_prob_individual, mu
         values = [binary_to_decimal(ind, x_min, x_max) for ind in combined_population]
         best_value = binary_to_decimal(best_individual, x_min, x_max)
         worst_value = binary_to_decimal(combined_population[np.argmin(combined_fitness)], x_min, x_max)
-        
-        frequencies, bin_edges = np.histogram(values, bins=20)
+
+        # Evaluar la función objetivo en los valores
+        objective_values = [f(val) for val in values]
+
         plt.figure()
-        plt.plot(bin_edges[:-1], frequencies, label='Histogram')
-        plt.scatter([best_value], [0], color='red', label='Best', zorder=5)
-        plt.scatter([worst_value], [0], color='blue', label='Worst', zorder=5)
-        plt.scatter(values, np.zeros_like(values), color='green', label='Population', zorder=5, alpha=0.6)
-        plt.title(f'Generation {generation}')
-        plt.xlabel('x')
-        plt.ylabel('Frequency')
+        plt.plot(np.linspace(x_min, x_max, 400), [f(x) for x in np.linspace(x_min, x_max, 400)], label='f(x)')
+        plt.scatter(values, objective_values, color='lightblue', label='Individuos', alpha=0.6)
+        plt.scatter([best_value], [f(best_value)], color='green', label='Mejor Individuo', zorder=5)
+        plt.scatter([worst_value], [f(worst_value)], color='red', label='Peor Individuo', zorder=5)
+        plt.title(f'Generación {generation}')
+        plt.xlabel('X')
+        plt.ylabel('f(x)')
         plt.legend()
         plt.savefig(f'generation_plots/generation_{generation}.png')
         plt.close()
+
         
         # Poda de la población
         population, fitness = prune_population(combined_population, combined_fitness, population_size, maximize)
