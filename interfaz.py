@@ -6,7 +6,7 @@ root = Tk()
 root.title("ALGORITMO GENÉTICO")
 
 class DataInfo:
-    def __init__(self, pob_inicial, pob_max, resolucion, lim_inf, lim_sup, mut_ind, mut_gen, num_generaciones, problema, bits):
+    def __init__(self, pob_inicial, pob_max, resolucion, lim_inf, lim_sup, mut_ind, mut_gen,num_generaciones, problema):
         self.pob_inicial = pob_inicial
         self.pob_max = pob_max
         self.resolucion = resolucion
@@ -16,7 +16,6 @@ class DataInfo:
         self.mut_gen = mut_gen
         self.num_generaciones = num_generaciones
         self.problema = problema
-        self.bits = bits
 
 mainframe = ttk.Frame(root, padding="20 20 50 50")
 mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
@@ -35,8 +34,7 @@ def save_data():
     mut_gen_value = mut_gen.get()
     num_generaciones_value = num_generaciones.get()
     problema_value = combobox_var.get()
-    bits_value = bits.get()
-    data = DataInfo(p_inicial_value, p_max_value, resolucion_value, lim_inf_value, lim_sup_value, mut_ind_value, mut_gen_value, num_generaciones_value, problema_value, bits_value)
+    data = DataInfo(p_inicial_value, p_max_value, resolucion_value, lim_inf_value, lim_sup_value, mut_ind_value, mut_gen_value, num_generaciones_value, problema_value)
     algoritmo_genetico(data)        
 
 pob_inicial = StringVar()
@@ -70,10 +68,6 @@ ttk.Spinbox(mainframe, textvariable=mut_gen).grid(column=3, row=7)
 mut_ind = StringVar()
 ttk.Label(mainframe, text="P. mutación del individuo:").grid(column=1, row=8)
 ttk.Spinbox(mainframe, textvariable=mut_ind).grid(column=3, row=8)
-
-bits = StringVar()
-ttk.Label(mainframe, text="Bits:").grid(column=1, row=9)
-ttk.Spinbox(mainframe, textvariable=bits).grid(column=3, row=9)
 
 ttk.Label(mainframe, text="selecciones uno:").grid(column=1, row=10, sticky=W)
 combobox_var = StringVar(value="Minimizacion")
