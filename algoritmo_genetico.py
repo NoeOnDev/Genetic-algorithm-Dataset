@@ -5,17 +5,14 @@ import argparse
 import matplotlib.pyplot as plt
 import cv2
 
-# Función para convertir binario a decimal
 def binario_a_decimal(cadena_binaria, x_min, x_max):
     valor_entero = int(cadena_binaria, 2)
     return x_min + (x_max - x_min) * valor_entero / (2**len(cadena_binaria) - 1)
 
-# Función para convertir decimal a binario
 def decimal_a_binario(valor, x_min, x_max, num_bits=16):
     valor_entero = int((valor - x_min) / (x_max - x_min) * (2**num_bits - 1))
     return format(valor_entero, f'0{num_bits}b')
 
-# Inicialización de la población
 def inicializar_poblacion(tam_poblacion, x_min, x_max, num_bits=16):
     poblacion = []
     for _ in range(tam_poblacion):
@@ -24,13 +21,11 @@ def inicializar_poblacion(tam_poblacion, x_min, x_max, num_bits=16):
         poblacion.append(cadena_binaria)
     return poblacion
 
-# Función de aptitud
 def funcion_aptitud(cadena_binaria, x_min, x_max, maximizar=True):
     x = binario_a_decimal(cadena_binaria, x_min, x_max)
     aptitud = x * np.cos(x)
     return aptitud if maximizar else -aptitud
 
-# Formación de parejas
 def formar_parejas(poblacion):
     parejas = []
     tam_poblacion = len(poblacion)
@@ -42,7 +37,6 @@ def formar_parejas(poblacion):
         parejas.append((i, companeros))
     return parejas
 
-# Cruza de información
 def cruza(padre1, padre2, num_bits=16):
     num_puntos = random.randint(1, num_bits - 1)
     puntos_cruza = sorted(random.sample(range(1, num_bits), num_puntos))
@@ -53,7 +47,6 @@ def cruza(padre1, padre2, num_bits=16):
             hijo2[puntos_cruza[i]:puntos_cruza[i+1]] = padre1[puntos_cruza[i]:puntos_cruza[i+1]]
     return ''.join(hijo1), ''.join(hijo2)
 
-# Crear descendencia
 def crear_descendencia(poblacion, parejas, num_bits=16):
     descendencia = []
     for i, companeros in parejas:
@@ -65,7 +58,6 @@ def crear_descendencia(poblacion, parejas, num_bits=16):
             descendencia.append(hijo2)
     return descendencia
 
-# Mutación
 def mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
     if random.random() < tasa_mutacion_individuo:
         individuo = list(individuo)
@@ -79,7 +71,6 @@ def mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
 def aplicar_mutaciones(descendencia, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
     return [mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits) for individuo in descendencia]
 
-# Podar población
 def podar_poblacion(poblacion, aptitud, tam_max, mejor_individuo):
     poblacion_unica, indices_unicos = np.unique(poblacion, return_index=True)
     aptitud_unica = [aptitud[i] for i in indices_unicos]
@@ -134,7 +125,6 @@ def crear_video(directorio, output_file, fps=4):
 
     video.release()
 
-# Argumentos del programa
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Algoritmo Genético para maximizar y minimizar funciones 2D.')
     parser.add_argument('--tam_poblacion', type=int, default=3, help='Tamaño de la población inicial')
@@ -154,7 +144,6 @@ if __name__ == "__main__":
     crear_directorio(args.directorio_graficas)
     crear_directorio(args.directorio_evolucion)
 
-    # Inicialización
     poblacion = inicializar_poblacion(args.tam_poblacion, args.x_min, args.x_max)
     aptitud = [funcion_aptitud(ind, args.x_min, args.x_max, args.maximizar) for ind in poblacion]
 
@@ -177,7 +166,6 @@ if __name__ == "__main__":
         mejor_indice = np.argmax(aptitud_unica) if args.maximizar else np.argmin(aptitud_unica)
         mejor_individuo = poblacion_unica[mejor_indice]
 
-        # Guardar estadísticas antes de podar
         mejor_aptitud_hist.append(max(aptitud_unica))
         peor_aptitud_hist.append(min(aptitud_unica))
         promedio_aptitud_hist.append(np.mean(aptitud_unica))
