@@ -4,18 +4,17 @@ import random
 import argparse
 import matplotlib.pyplot as plt
 import cv2
+import pandas as pd
+import six
 
-# Función para convertir binario a decimal
 def binario_a_decimal(cadena_binaria, x_min, x_max):
     valor_entero = int(cadena_binaria, 2)
     return x_min + (x_max - x_min) * valor_entero / (2**len(cadena_binaria) - 1)
 
-# Función para convertir decimal a binario
 def decimal_a_binario(valor, x_min, x_max, num_bits=16):
     valor_entero = int((valor - x_min) / (x_max - x_min) * (2**num_bits - 1))
     return format(valor_entero, f'0{num_bits}b')
 
-# Inicialización de la población
 def inicializar_poblacion(tam_poblacion, x_min, x_max, num_bits=16):
     poblacion = []
     for _ in range(tam_poblacion):
@@ -24,13 +23,11 @@ def inicializar_poblacion(tam_poblacion, x_min, x_max, num_bits=16):
         poblacion.append(cadena_binaria)
     return poblacion
 
-# Función de aptitud
 def funcion_aptitud(cadena_binaria, x_min, x_max, minimizar=False):
     x = binario_a_decimal(cadena_binaria, x_min, x_max)
     aptitud = x * np.cos(x)
     return -aptitud if minimizar else aptitud
 
-# Formar parejas
 def formar_parejas(poblacion):
     parejas = []
     tam_poblacion = len(poblacion)
@@ -42,7 +39,6 @@ def formar_parejas(poblacion):
         parejas.append((i, companeros))
     return parejas
 
-# Cruza
 def cruza(padre1, padre2, num_bits=16):
     num_puntos = random.randint(1, num_bits - 1)
     puntos_cruza = sorted(random.sample(range(1, num_bits), num_puntos))
@@ -53,7 +49,6 @@ def cruza(padre1, padre2, num_bits=16):
             hijo2[puntos_cruza[i]:puntos_cruza[i+1]] = padre1[puntos_cruza[i]:puntos_cruza[i+1]]
     return ''.join(hijo1), ''.join(hijo2)
 
-# Crear descendencia
 def crear_descendencia(poblacion, parejas, num_bits=16):
     descendencia = []
     for i, companeros in parejas:
@@ -65,7 +60,6 @@ def crear_descendencia(poblacion, parejas, num_bits=16):
             descendencia.append(hijo2)
     return descendencia
 
-# Mutar
 def mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
     if random.random() < tasa_mutacion_individuo:
         individuo = list(individuo)
@@ -79,7 +73,6 @@ def mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
 def aplicar_mutaciones(descendencia, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
     return [mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits) for individuo in descendencia]
 
-# Podar población
 def podar_poblacion(poblacion, aptitud, tam_max, mejor_individuo):
     poblacion_unica, indices_unicos = np.unique(poblacion, return_index=True)
     aptitud_unica = [aptitud[i] for i in indices_unicos]
@@ -134,7 +127,6 @@ def crear_video(directorio, output_file, fps=4):
 
     video.release()
 
-# Argumentos del programa
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Genetic Algorithm for maximizing and minimizing 2D functions.')
     parser.add_argument('--tam_poblacion', type=int, default=10, help='Initial population size')
@@ -148,19 +140,21 @@ if __name__ == "__main__":
     parser.add_argument('--directorio_graficas', type=str, default='graficas', help='Directory to save the graphs')
     parser.add_argument('--directorio_evolucion', type=str, default='evolucion', help='Directory to save the evolution graph')
     parser.add_argument('--output_video', type=str, default='evolucion.mp4', help='Output video file name')
+    parser.add_argument('--output_csv', type=str, default='mejores_individuos.csv', help='Output CSV file name')  # Añadir argumento para el archivo CSV
     
     args = parser.parse_args()
 
     crear_directorio(args.directorio_graficas)
     crear_directorio(args.directorio_evolucion)
 
-    # Inicialización
+    # Inicialización de la población
     poblacion = inicializar_poblacion(args.tam_poblacion, args.x_min, args.x_max)
     aptitud = [funcion_aptitud(ind, args.x_min, args.x_max, args.minimizar) for ind in poblacion]
 
     mejor_aptitud_hist = []
     peor_aptitud_hist = []
     promedio_aptitud_hist = []
+    mejores_individuos = []
 
     for generacion in range(args.generaciones):
         parejas = formar_parejas(poblacion)
@@ -177,16 +171,19 @@ if __name__ == "__main__":
         mejor_indice = np.argmin(aptitud_unica) if args.minimizar else np.argmax(aptitud_unica)
         mejor_individuo = poblacion_unica[mejor_indice]
 
-        # Guardar estadísticas antes de podar
+        # Guardo la estadisticas antes de podar
         mejor_aptitud_hist.append(min(aptitud_unica) if args.minimizar else max(aptitud_unica))
         peor_aptitud_hist.append(max(aptitud_unica) if args.minimizar else min(aptitud_unica))
         promedio_aptitud_hist.append(np.mean(aptitud_unica) if args.minimizar else np.mean(aptitud_unica))
+
+        # Almaceno al mejor individuo de la generación
+        mejor_x = binario_a_decimal(mejor_individuo, args.x_min, args.x_max)
+        mejores_individuos.append((generacion + 1, mejor_individuo, mejor_indice, mejor_x, aptitud_unica[mejor_indice]))
 
         guardar_grafica(generacion, poblacion_unica, aptitud_unica, args.x_min, args.x_max, args.directorio_graficas, args.minimizar)
 
         poblacion, aptitud = podar_poblacion(poblacion_unica, aptitud_unica, args.tam_poblacion, mejor_individuo)
 
-        mejor_x = binario_a_decimal(mejor_individuo, args.x_min, args.x_max)
         print(f"Generación {generacion + 1}: Mejor individuo = {mejor_individuo}, Índice = {mejor_indice}, x = {mejor_x}, Aptitud = {aptitud_unica[mejor_indice]}")
 
     print("Optimización completada.")
@@ -205,3 +202,30 @@ if __name__ == "__main__":
     plt.show()
     
     crear_video(args.directorio_graficas, args.output_video)
+
+    def render_mpl_table(data, col_width=3.0, row_height=0.625, font_size=7,
+                        header_color='#40466e', row_colors=['#f1f1f2', 'w'], edge_color='w',
+                        bbox=[0, 0, 1, 1], header_columns=0,
+                        ax=None, **kwargs):
+        if ax is None:
+            size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
+            fig, ax = plt.subplots(figsize=size)
+            ax.axis('off')
+
+        mpl_table = ax.table(cellText=data.values, bbox=bbox, colLabels=data.columns, **kwargs)
+
+        mpl_table.auto_set_font_size(False)
+        mpl_table.set_fontsize(font_size)
+
+        for k, cell in six.iteritems(mpl_table._cells):
+            cell.set_edgecolor(edge_color)
+            if k[0] == 0:
+                cell.set_text_props(weight='bold', color='w')
+                cell.set_facecolor(header_color)
+            else:
+                cell.set_facecolor(row_colors[k[0]%len(row_colors)])
+        return ax
+
+    df = pd.DataFrame(mejores_individuos, columns=['Generación', 'Mejor Individuo (Binario)', 'Índice', 'x', 'Aptitud'])
+    render_mpl_table(df, header_columns=0, col_width=2.0)
+    plt.savefig('tabla.png')
