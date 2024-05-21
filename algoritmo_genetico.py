@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import cv2
 import pandas as pd
 import six
+import tkinter as tk
+from tkinter import messagebox
 
 def binario_a_decimal(cadena_binaria, x_min, x_max):
     valor_entero = int(cadena_binaria, 2)
@@ -136,11 +138,11 @@ if __name__ == "__main__":
     parser.add_argument('--tasa_mutacion_individuo', type=float, default=0.7, help='Individual mutation probability')
     parser.add_argument('--tasa_mutacion_gen', type=float, default=0.6, help='Gene mutation probability')
     parser.add_argument('--generaciones', type=int, default=10, help='Number of generations')
-    parser.add_argument('--minimizar', action='store_true', help='Minimize the function instead of maximizing it')
+    parser.add_argument('--minimizar', action='store_false', help='Minimize the function instead of maximizing it')
     parser.add_argument('--directorio_graficas', type=str, default='graficas', help='Directory to save the graphs')
     parser.add_argument('--directorio_evolucion', type=str, default='evolucion', help='Directory to save the evolution graph')
     parser.add_argument('--output_video', type=str, default='evolucion.mp4', help='Output video file name')
-    parser.add_argument('--output_csv', type=str, default='mejores_individuos.csv', help='Output CSV file name')  # Añadir argumento para el archivo CSV
+    parser.add_argument('--output_csv', type=str, default='mejores_individuos.csv', help='Output CSV file name')
     
     args = parser.parse_args()
 
