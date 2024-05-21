@@ -68,7 +68,8 @@ def mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
         individuo = list(individuo)
         for i in range(num_bits):
             if random.random() < tasa_mutacion_gen:
-                individuo[i] = '0' if individuo[i] == '1' else '1'
+                j = random.randint(0, num_bits - 1)
+                individuo[i], individuo[j] = individuo[j], individuo[i]
         individuo = ''.join(individuo)
     return individuo
 
