@@ -149,7 +149,6 @@ if __name__ == "__main__":
     parser.add_argument('--directorio_evolucion', type=str, default='evolucion', help='Directorio para guardar la gráfica de evolución')
     parser.add_argument('--output_video', type=str, default='evolucion.mp4', help='Nombre del archivo de salida del video')
     
-
     args = parser.parse_args()
 
     crear_directorio(args.directorio_graficas)
