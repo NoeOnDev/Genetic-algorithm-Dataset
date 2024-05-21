@@ -3,6 +3,7 @@ import numpy as np
 import random
 import argparse
 import matplotlib.pyplot as plt
+import cv2
 
 # Función para convertir binario a decimal
 def binario_a_decimal(cadena_binaria, x_min, x_max):
@@ -119,10 +120,24 @@ def guardar_grafica(generacion, poblacion, aptitudes, x_min, x_max, directorio):
     plt.savefig(filename)
     plt.close()
 
+def crear_video(directorio, output_file, fps=4):
+    images = [img for img in os.listdir(directorio) if img.endswith(".png")]
+    images.sort(key=lambda x: int(x.split('_')[-1].split('.')[0]))
+    
+    frame = cv2.imread(os.path.join(directorio, images[0]))
+    height, width, layers = frame.shape
+
+    video = cv2.VideoWriter(output_file, cv2.VideoWriter_fourcc(*'mp4v'), fps, (width, height))
+
+    for image in images:
+        video.write(cv2.imread(os.path.join(directorio, image)))
+
+    video.release()
+
 # Argumentos del programa
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Algoritmo Genético para maximizar y minimizar funciones 2D.')
-    parser.add_argument('--tam_poblacion', type=int, default=2, help='Tamaño de la población inicial')
+    parser.add_argument('--tam_poblacion', type=int, default=3, help='Tamaño de la población inicial')
     parser.add_argument('--tam_max_poblacion', type=int, default=50, help='Tamaño máximo de la población')
     parser.add_argument('--x_min', type=float, default=-10, help='Límite inferior de x')
     parser.add_argument('--x_max', type=float, default=40, help='Límite superior de x')
@@ -131,10 +146,14 @@ if __name__ == "__main__":
     parser.add_argument('--generaciones', type=int, default=100, help='Número de generaciones')
     parser.add_argument('--maximizar', action='store_true', help='Maximizar la función en lugar de minimizarla')
     parser.add_argument('--directorio_graficas', type=str, default='graficas', help='Directorio para guardar las gráficas')
+    parser.add_argument('--directorio_evolucion', type=str, default='evolucion', help='Directorio para guardar la gráfica de evolución')
+    parser.add_argument('--output_video', type=str, default='evolucion.mp4', help='Nombre del archivo de salida del video')
+    
 
     args = parser.parse_args()
 
     crear_directorio(args.directorio_graficas)
+    crear_directorio(args.directorio_evolucion)
 
     # Inicialización
     poblacion = inicializar_poblacion(args.tam_poblacion, args.x_min, args.x_max)
@@ -164,7 +183,6 @@ if __name__ == "__main__":
         peor_aptitud_hist.append(min(aptitud_unica))
         promedio_aptitud_hist.append(np.mean(aptitud_unica))
 
-        # Guardar gráfica de la generación actual
         guardar_grafica(generacion, poblacion_unica, aptitud_unica, args.x_min, args.x_max, args.directorio_graficas)
 
         poblacion, aptitud = podar_poblacion(poblacion_unica, aptitud_unica, args.tam_poblacion, mejor_individuo)
@@ -174,7 +192,6 @@ if __name__ == "__main__":
 
     print("Optimización finalizada.")
 
-    # Generar la gráfica de evolución
     generaciones = list(range(1, args.generaciones + 1))
     plt.figure(figsize=(10, 6))
     plt.plot(generaciones, mejor_aptitud_hist, label='Mejor Aptitud')
@@ -185,5 +202,7 @@ if __name__ == "__main__":
     plt.title('Evolución de la Aptitud de la Población')
     plt.legend()
     plt.grid(True)
-    plt.savefig(os.path.join(args.directorio_graficas, 'evolucion_aptitud.png'))
+    plt.savefig(os.path.join(args.directorio_evolucion, 'evolucion_aptitud.png'))
     plt.show()
+    
+    crear_video(args.directorio_graficas, args.output_video)
