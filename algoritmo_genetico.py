@@ -122,7 +122,7 @@ def guardar_grafica(generacion, poblacion, aptitudes, x_min, x_max, directorio):
 # Argumentos del programa
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Algoritmo Genético para maximizar y minimizar funciones 2D.')
-    parser.add_argument('--tam_poblacion', type=int, default=20, help='Tamaño de la población inicial')
+    parser.add_argument('--tam_poblacion', type=int, default=2, help='Tamaño de la población inicial')
     parser.add_argument('--tam_max_poblacion', type=int, default=50, help='Tamaño máximo de la población')
     parser.add_argument('--x_min', type=float, default=-10, help='Límite inferior de x')
     parser.add_argument('--x_max', type=float, default=40, help='Límite superior de x')
@@ -134,14 +134,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # Crear directorio para las gráficas
     crear_directorio(args.directorio_graficas)
 
     # Inicialización
     poblacion = inicializar_poblacion(args.tam_poblacion, args.x_min, args.x_max)
     aptitud = [funcion_aptitud(ind, args.x_min, args.x_max, args.maximizar) for ind in poblacion]
 
-    # Para la gráfica
     mejor_aptitud_hist = []
     peor_aptitud_hist = []
     promedio_aptitud_hist = []
