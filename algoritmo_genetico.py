@@ -1,212 +1,133 @@
 import numpy as np
 import random
-import matplotlib.pyplot as plt
-import os
-import cv2
-import pandas as pd
+import argparse
 
-# Crear carpetas si no existen
-if not os.path.exists('graficas_generacion'):
-    os.makedirs('graficas_generacion')
-if not os.path.exists('graficas_estadisticas'):
-    os.makedirs('graficas_estadisticas')
+# Función para convertir binario a decimal
+def binary_to_decimal(binary_str, x_min, x_max):
+    integer_value = int(binary_str, 2)
+    return x_min + (x_max - x_min) * integer_value / (2**len(binary_str) - 1)
 
-# Función a optimizar
-def funcion_objetivo(x):
-    return x * np.cos(x)
-
-# Convertir binario a decimal
-def binario_a_decimal(cadena_binaria, x_min, x_max):
-    decimal = int(cadena_binaria, 2)
-    valor_max = 2**len(cadena_binaria) - 1
-    return x_min + (decimal / valor_max) * (x_max - x_min)
-
-# Convertir decimal a binario
-def decimal_a_binario(valor, x_min, x_max, longitud_cromosoma):
-    valor_max = 2**longitud_cromosoma - 1
-    normalizado = int((valor - x_min) / (x_max - x_min) * valor_max)
-    return f'{normalizado:0{longitud_cromosoma}b}'
+# Función para convertir decimal a binario
+def decimal_to_binary(value, x_min, x_max, num_bits=16):
+    integer_value = int((value - x_min) / (x_max - x_min) * (2**num_bits - 1))
+    return format(integer_value, f'0{num_bits}b')
 
 # Inicialización de la población
-def inicializar_poblacion(tamano, x_min, x_max, longitud_cromosoma):
-    poblacion = []
-    for _ in range(tamano):
-        valor = random.uniform(x_min, x_max)
-        cadena_binaria = decimal_a_binario(valor, x_min, x_max, longitud_cromosoma)
-        poblacion.append(cadena_binaria)
-    return poblacion
+def initialize_population(pop_size, x_min, x_max, num_bits=16):
+    population = []
+    for _ in range(pop_size):
+        value = random.uniform(x_min, x_max)
+        binary_str = decimal_to_binary(value, x_min, x_max, num_bits)
+        population.append(binary_str)
+    return population
 
-# Evaluar la aptitud (fitness) de cada individuo
-def evaluar_poblacion(poblacion, x_min, x_max):
-    return np.array([funcion_objetivo(binario_a_decimal(ind, x_min, x_max)) for ind in poblacion])
+# Función de aptitud
+def fitness_function(binary_str, x_min, x_max, maximize=True):
+    x = binary_to_decimal(binary_str, x_min, x_max)
+    fitness = x * np.cos(x)
+    return fitness if maximize else -fitness
 
-# Seleccionar parejas de individuos (Estrategia A1)
-def formar_parejas(poblacion):
-    parejas = []
-    n = len(poblacion)
-    for individuo in poblacion:
-        m = random.randint(1, n)
-        companeros = random.sample(list(poblacion), m)
-        if individuo in companeros:
-            companeros.remove(individuo)
-        parejas.append((individuo, companeros))
-    return parejas
+# Formación de parejas
+def form_pairs(population):
+    pairs = []
+    pop_size = len(population)
+    for i in range(pop_size):
+        m = random.randint(0, pop_size - 1)
+        mates = random.sample(range(pop_size), m)
+        if i in mates:
+            mates.remove(i)
+        pairs.append((i, mates))
+    return pairs
 
-# Cruza de información (Estrategia C2)
-def cruzar(padres):
-    padre1, padre2 = padres
-    num_puntos = random.randint(1, len(padre1) - 1)
-    puntos_cruza = sorted(random.sample(range(1, len(padre1)), num_puntos))
-    
-    descendiente = list(padre1)
-    for i in range(len(puntos_cruza)):
-        if i % 2 == 0:
-            descendiente[puntos_cruza[i]:] = padre2[puntos_cruza[i]:]
-        else:
-            descendiente[:puntos_cruza[i]] = padre2[:puntos_cruza[i]]
-    
-    return ''.join(descendiente)
+# Cruza de información
+def crossover(parent1, parent2, num_bits=16):
+    num_points = random.randint(1, num_bits - 1)
+    crossover_points = sorted(random.sample(range(1, num_bits), num_points))
+    child1, child2 = list(parent1), list(parent2)
+    for i in range(0, len(crossover_points), 2):
+        if i + 1 < len(crossover_points):
+            child1[crossover_points[i]:crossover_points[i+1]] = parent2[crossover_points[i]:crossover_points[i+1]]
+            child2[crossover_points[i]:crossover_points[i+1]] = parent1[crossover_points[i]:crossover_points[i+1]]
+    return ''.join(child1), ''.join(child2)
 
-# Mutar los individuos descendientes (Estrategia M2)
-def mutar(individuo, prob_mutacion_individuo, prob_mutacion_gen):
-    if random.random() < prob_mutacion_individuo:
-        individuo = list(individuo)
-        for i in range(len(individuo)):
-            if random.random() < prob_mutacion_gen:
-                j = random.randint(0, len(individuo) - 1)
-                individuo[i], individuo[j] = individuo[j], individuo[i]
-        individuo = ''.join(individuo)
-    return individuo
+# Crear descendencia
+def create_offspring(population, pairs, num_bits=16):
+    offspring = []
+    for i, mates in pairs:
+        parent1 = population[i]
+        for mate in mates:
+            parent2 = population[mate]
+            child1, child2 = crossover(parent1, parent2, num_bits)
+            offspring.append(child1)
+            offspring.append(child2)
+    return offspring
 
-# Poda (Estrategia P2)
-def podar_poblacion(poblacion, aptitud, tamano, maximizar):
-    poblacion_unica, indices_unicos = np.unique(poblacion, return_index=True)
-    aptitud_unica = aptitud[indices_unicos]
-    
-    if len(poblacion_unica) > tamano:
-        if maximizar:
-            indices_ordenados = np.argsort(-aptitud_unica)
-        else:
-            indices_ordenados = np.argsort(aptitud_unica)
-        poblacion_podada = poblacion_unica[indices_ordenados][:tamano]
-        aptitud_podada = aptitud_unica[indices_ordenados][:tamano]
-    else:
-        poblacion_podada = poblacion_unica
-        aptitud_podada = aptitud_unica
-    
-    return poblacion_podada, aptitud_podada
+# Mutación
+def mutate(individual, mutation_rate_individual, mutation_rate_gene, num_bits=16):
+    if random.random() < mutation_rate_individual:
+        individual = list(individual)
+        for i in range(num_bits):
+            if random.random() < mutation_rate_gene:
+                individual[i] = '1' if individual[i] == '0' else '0'
+        individual = ''.join(individual)
+    return individual
 
-# Bucle de optimización
-def algoritmo_genetico(tamano_poblacion, tamano_maximo_poblacion, generaciones, prob_mutacion_individuo, prob_mutacion_gen, x_min, x_max, proporcion_cromosoma, maximizar):
-    longitud_maxima_cromosoma = 20  # Longitud máxima del cromosoma (puede ajustarse según sea necesario)
-    longitud_cromosoma = int(proporcion_cromosoma * longitud_maxima_cromosoma)
-    
-    poblacion = inicializar_poblacion(tamano_poblacion, x_min, x_max, longitud_cromosoma)
-    aptitud = evaluar_poblacion(poblacion, x_min, x_max)
-    
-    # Listas para guardar los estadísticos
-    mejores_aptitudes = []
-    aptitudes_promedio = []
-    peores_aptitudes = []
-    
-    # Lista para guardar información del mejor individuo
-    info_mejores_individuos = []
-    
-    for generacion in range(generaciones):
-        nueva_poblacion = []
-        parejas = formar_parejas(poblacion)
-        
-        for individuo, companeros in parejas:
-            for companero in companeros:
-                descendiente = cruzar([individuo, companero])
-                descendiente = mutar(descendiente, prob_mutacion_individuo, prob_mutacion_gen)
-                nueva_poblacion.append(descendiente)
-        
-        nueva_poblacion = np.array(nueva_poblacion)
-        nueva_aptitud = evaluar_poblacion(nueva_poblacion, x_min, x_max)
-        
-        poblacion_combinada = np.concatenate((poblacion, nueva_poblacion))
-        aptitud_combinada = np.concatenate((aptitud, nueva_aptitud))
-        
-        # Guardar estadísticos de la población
-        if maximizar:
-            indice_mejor = np.argmax(aptitud_combinada)
-            mejor_aptitud = np.max(aptitud_combinada)
-            peor_aptitud = np.min(aptitud_combinada)
-        else:
-            indice_mejor = np.argmin(aptitud_combinada)
-            mejor_aptitud = np.min(aptitud_combinada)
-            peor_aptitud = np.max(aptitud_combinada)
-        
-        aptitud_promedio = np.mean(aptitud_combinada)
-        
-        mejor_individuo = poblacion_combinada[indice_mejor]
-        mejor_valor = binario_a_decimal(mejor_individuo, x_min, x_max)
-        
-        print(f'Generación {generacion}: Mejor Individuo = {mejor_valor} Aptitud = {mejor_aptitud}')
-        
-        # Guardar información del mejor individuo
-        info_mejores_individuos.append({
-            'Generación': generacion,
-            'Individuo': mejor_individuo,
-            'Valor del índice': indice_mejor,
-            'Valor de x': mejor_valor,
-            'Aptitud': mejor_aptitud
-        })
-        
-        mejores_aptitudes.append(mejor_aptitud)
-        aptitudes_promedio.append(aptitud_promedio)
-        peores_aptitudes.append(peor_aptitud)
-        
-        # Crear y guardar la gráfica de la generación
-        valores = [binario_a_decimal(ind, x_min, x_max) for ind in poblacion_combinada]
-        peor_valor = binario_a_decimal(poblacion_combinada[np.argmin(aptitud_combinada) if maximizar else np.argmax(aptitud_combinada)], x_min, x_max)
+def apply_mutations(offspring, mutation_rate_individual, mutation_rate_gene, num_bits=16):
+    return [mutate(individual, mutation_rate_individual, mutation_rate_gene, num_bits) for individual in offspring]
 
-        valores_objetivo = [funcion_objetivo(val) for val in valores]
+# Podar población
+def prune_population(population, fitness, max_size, best_individual):
+    unique_population, unique_indices = np.unique(population, return_index=True)
+    unique_fitness = [fitness[i] for i in unique_indices]
+    
+    best_index = np.argmax(unique_fitness)
+    best_individual = unique_population[best_index]
+    
+    indices = list(range(len(unique_population)))
+    indices.remove(best_index)
+    random.shuffle(indices)
+    indices = indices[:max_size-1]
+    
+    new_population = [best_individual] + [unique_population[i] for i in indices]
+    new_fitness = [unique_fitness[best_index]] + [unique_fitness[i] for i in indices]
+    
+    return new_population, new_fitness
 
-        plt.figure()
-        plt.plot(np.linspace(x_min, x_max, 400), [funcion_objetivo(x) for x in np.linspace(x_min, x_max, 400)], label='f(x)')
-        plt.scatter(valores, valores_objetivo, color='lightblue', label='Individuos', alpha=0.6)
-        plt.scatter([mejor_valor], [funcion_objetivo(mejor_valor)], color='green', label='Mejor Individuo', zorder=5)
-        plt.scatter([peor_valor], [funcion_objetivo(peor_valor)], color='red', label='Peor Individuo', zorder=5)
-        plt.title(f'Generación {generacion}')
-        plt.xlabel('X')
-        plt.ylabel('f(x)')
-        plt.legend()
-        plt.savefig(f'graficas_generacion/generacion_{generacion}.png')
-        plt.close()
+# Argumentos del programa
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Algoritmo Genético para maximizar y minimizar funciones 2D.')
+    parser.add_argument('--pop_size', type=int, default=20, help='Tamaño de la población inicial')
+    parser.add_argument('--max_pop_size', type=int, default=30, help='Tamaño máximo de la población')
+    parser.add_argument('--x_min', type=float, default=-10, help='Límite inferior de x')
+    parser.add_argument('--x_max', type=float, default=10, help='Límite superior de x')
+    parser.add_argument('--mutation_rate_individual', type=float, default=0.1, help='Probabilidad de mutación del individuo')
+    parser.add_argument('--mutation_rate_gene', type=float, default=0.05, help='Probabilidad de mutación del gen')
+    parser.add_argument('--generations', type=int, default=50, help='Número de generaciones')
+    parser.add_argument('--maximize', action='store_true', help='Maximizar la función en lugar de minimizarla')
 
-        # Poda de la población
-        poblacion, aptitud = podar_poblacion(poblacion_combinada, aptitud_combinada, min(tamano_poblacion, tamano_maximo_poblacion), maximizar)
-    
-    # Crear y guardar la gráfica de los estadísticos
-    plt.figure()
-    plt.plot(mejores_aptitudes, label='Mejor Aptitud')
-    plt.plot(aptitudes_promedio, label='Promedio')
-    plt.plot(peores_aptitudes, label='Peor Aptitud')
-    plt.title('Estadísticas de Aptitud')
-    plt.xlabel('Generación')
-    plt.ylabel('Aptitud')
-    plt.legend()
-    plt.savefig('graficas_estadisticas/estadisticas.png')
-    plt.close()
-    
-    mejores_individuos_df = pd.DataFrame(info_mejores_individuos)
-    mejores_individuos_df.to_csv('mejores_individuos.csv', index=False)
-    
-    return poblacion, aptitud
+    args = parser.parse_args()
 
-def crear_video_de_imagenes(carpeta_imagenes, video_salida):
-    imagenes = [img for img in os.listdir(carpeta_imagenes) if img.endswith(".png")]
-    imagenes.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
-    
-    frame = cv2.imread(os.path.join(carpeta_imagenes, imagenes[0]))
-    altura, ancho, capas = frame.shape
-    
-    video = cv2.VideoWriter(video_salida, cv2.VideoWriter_fourcc(*'DIVX'), 1, (ancho, altura))
-    
-    for imagen in imagenes:
-        video.write(cv2.imread(os.path.join(carpeta_imagenes, imagen)))
-    
-    cv2.destroyAllWindows()
-    video.release()
+    # Inicialización
+    population = initialize_population(args.pop_size, args.x_min, args.x_max)
+    fitness = [fitness_function(ind, args.x_min, args.x_max, args.maximize) for ind in population]
+
+    for generation in range(args.generations):
+        pairs = form_pairs(population)
+        offspring = create_offspring(population, pairs)
+        mutated_offspring = apply_mutations(offspring, args.mutation_rate_individual, args.mutation_rate_gene)
+        offspring_fitness = [fitness_function(ind, args.x_min, args.x_max, args.maximize) for ind in mutated_offspring]
+
+        combined_population = population + mutated_offspring
+        combined_fitness = fitness + offspring_fitness
+
+        unique_population, unique_indices = np.unique(combined_population, return_index=True)
+        unique_fitness = [combined_fitness[i] for i in unique_indices]
+
+        best_index = np.argmax(unique_fitness) if args.maximize else np.argmin(unique_fitness)
+        best_individual = unique_population[best_index]
+
+        population, fitness = prune_population(unique_population, unique_fitness, args.pop_size, best_individual)
+
+        print(f"Generación {generation + 1}: Mejor individuo = {binary_to_decimal(best_individual, args.x_min, args.x_max)}, Fitness = {unique_fitness[best_index]}")
+
+    print("Optimización finalizada.")
