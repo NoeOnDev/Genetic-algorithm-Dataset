@@ -5,14 +5,17 @@ import argparse
 import matplotlib.pyplot as plt
 import cv2
 
+# Función para convertir binario a decimal
 def binario_a_decimal(cadena_binaria, x_min, x_max):
     valor_entero = int(cadena_binaria, 2)
     return x_min + (x_max - x_min) * valor_entero / (2**len(cadena_binaria) - 1)
 
+# Función para convertir decimal a binario
 def decimal_a_binario(valor, x_min, x_max, num_bits=16):
     valor_entero = int((valor - x_min) / (x_max - x_min) * (2**num_bits - 1))
     return format(valor_entero, f'0{num_bits}b')
 
+# Inicialización de la población
 def inicializar_poblacion(tam_poblacion, x_min, x_max, num_bits=16):
     poblacion = []
     for _ in range(tam_poblacion):
@@ -21,11 +24,13 @@ def inicializar_poblacion(tam_poblacion, x_min, x_max, num_bits=16):
         poblacion.append(cadena_binaria)
     return poblacion
 
-def funcion_aptitud(cadena_binaria, x_min, x_max, maximizar=True):
+# Función de aptitud
+def funcion_aptitud(cadena_binaria, x_min, x_max, minimizar=False):
     x = binario_a_decimal(cadena_binaria, x_min, x_max)
     aptitud = x * np.cos(x)
-    return aptitud if maximizar else -aptitud
+    return -aptitud if minimizar else aptitud
 
+# Formar parejas
 def formar_parejas(poblacion):
     parejas = []
     tam_poblacion = len(poblacion)
@@ -37,6 +42,7 @@ def formar_parejas(poblacion):
         parejas.append((i, companeros))
     return parejas
 
+# Cruza
 def cruza(padre1, padre2, num_bits=16):
     num_puntos = random.randint(1, num_bits - 1)
     puntos_cruza = sorted(random.sample(range(1, num_bits), num_puntos))
@@ -47,6 +53,7 @@ def cruza(padre1, padre2, num_bits=16):
             hijo2[puntos_cruza[i]:puntos_cruza[i+1]] = padre1[puntos_cruza[i]:puntos_cruza[i+1]]
     return ''.join(hijo1), ''.join(hijo2)
 
+# Crear descendencia
 def crear_descendencia(poblacion, parejas, num_bits=16):
     descendencia = []
     for i, companeros in parejas:
@@ -58,6 +65,7 @@ def crear_descendencia(poblacion, parejas, num_bits=16):
             descendencia.append(hijo2)
     return descendencia
 
+# Mutar
 def mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
     if random.random() < tasa_mutacion_individuo:
         individuo = list(individuo)
@@ -71,6 +79,7 @@ def mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
 def aplicar_mutaciones(descendencia, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits=16):
     return [mutar(individuo, tasa_mutacion_individuo, tasa_mutacion_gen, num_bits) for individuo in descendencia]
 
+# Podar población
 def podar_poblacion(poblacion, aptitud, tam_max, mejor_individuo):
     poblacion_unica, indices_unicos = np.unique(poblacion, return_index=True)
     aptitud_unica = [aptitud[i] for i in indices_unicos]
@@ -92,10 +101,10 @@ def crear_directorio(directorio):
     if not os.path.exists(directorio):
         os.makedirs(directorio)
 
-def guardar_grafica(generacion, poblacion, aptitudes, x_min, x_max, directorio):
+def guardar_grafica(generacion, poblacion, aptitudes, x_min, x_max, directorio, minimizar):
     xs = [binario_a_decimal(ind, x_min, x_max) for ind in poblacion]
-    mejores = np.argmax(aptitudes)
-    peores = np.argmin(aptitudes)
+    mejores = np.argmin(aptitudes) if minimizar else np.argmax(aptitudes)
+    peores = np.argmax(aptitudes) if minimizar else np.argmin(aptitudes)
     
     plt.figure()
     plt.scatter(xs, aptitudes, color='lightblue', label='Individuos')
@@ -125,27 +134,29 @@ def crear_video(directorio, output_file, fps=4):
 
     video.release()
 
+# Argumentos del programa
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Algoritmo Genético para maximizar y minimizar funciones 2D.')
-    parser.add_argument('--tam_poblacion', type=int, default=3, help='Tamaño de la población inicial')
-    parser.add_argument('--tam_max_poblacion', type=int, default=50, help='Tamaño máximo de la población')
-    parser.add_argument('--x_min', type=float, default=-10, help='Límite inferior de x')
-    parser.add_argument('--x_max', type=float, default=40, help='Límite superior de x')
-    parser.add_argument('--tasa_mutacion_individuo', type=float, default=0.7, help='Probabilidad de mutación del individuo')
-    parser.add_argument('--tasa_mutacion_gen', type=float, default=0.6, help='Probabilidad de mutación del gen')
-    parser.add_argument('--generaciones', type=int, default=100, help='Número de generaciones')
-    parser.add_argument('--maximizar', action='store_true', help='Maximizar la función en lugar de minimizarla')
-    parser.add_argument('--directorio_graficas', type=str, default='graficas', help='Directorio para guardar las gráficas')
-    parser.add_argument('--directorio_evolucion', type=str, default='evolucion', help='Directorio para guardar la gráfica de evolución')
-    parser.add_argument('--output_video', type=str, default='evolucion.mp4', help='Nombre del archivo de salida del video')
+    parser = argparse.ArgumentParser(description='Genetic Algorithm for maximizing and minimizing 2D functions.')
+    parser.add_argument('--tam_poblacion', type=int, default=10, help='Initial population size')
+    parser.add_argument('--tam_max_poblacion', type=int, default=50, help='Maximum population size')
+    parser.add_argument('--x_min', type=float, default=-10, help='Lower limit of x')
+    parser.add_argument('--x_max', type=float, default=40, help='Upper limit of x')
+    parser.add_argument('--tasa_mutacion_individuo', type=float, default=0.7, help='Individual mutation probability')
+    parser.add_argument('--tasa_mutacion_gen', type=float, default=0.6, help='Gene mutation probability')
+    parser.add_argument('--generaciones', type=int, default=10, help='Number of generations')
+    parser.add_argument('--minimizar', action='store_true', help='Minimize the function instead of maximizing it')
+    parser.add_argument('--directorio_graficas', type=str, default='graficas', help='Directory to save the graphs')
+    parser.add_argument('--directorio_evolucion', type=str, default='evolucion', help='Directory to save the evolution graph')
+    parser.add_argument('--output_video', type=str, default='evolucion.mp4', help='Output video file name')
     
     args = parser.parse_args()
 
     crear_directorio(args.directorio_graficas)
     crear_directorio(args.directorio_evolucion)
 
+    # Inicialización
     poblacion = inicializar_poblacion(args.tam_poblacion, args.x_min, args.x_max)
-    aptitud = [funcion_aptitud(ind, args.x_min, args.x_max, args.maximizar) for ind in poblacion]
+    aptitud = [funcion_aptitud(ind, args.x_min, args.x_max, args.minimizar) for ind in poblacion]
 
     mejor_aptitud_hist = []
     peor_aptitud_hist = []
@@ -155,7 +166,7 @@ if __name__ == "__main__":
         parejas = formar_parejas(poblacion)
         descendencia = crear_descendencia(poblacion, parejas)
         descendencia_mutada = aplicar_mutaciones(descendencia, args.tasa_mutacion_individuo, args.tasa_mutacion_gen)
-        aptitud_descendencia = [funcion_aptitud(ind, args.x_min, args.x_max, args.maximizar) for ind in descendencia_mutada]
+        aptitud_descendencia = [funcion_aptitud(ind, args.x_min, args.x_max, args.minimizar) for ind in descendencia_mutada]
 
         poblacion_combinada = poblacion + descendencia_mutada
         aptitud_combinada = aptitud + aptitud_descendencia
@@ -163,27 +174,28 @@ if __name__ == "__main__":
         poblacion_unica, indices_unicos = np.unique(poblacion_combinada, return_index=True)
         aptitud_unica = [aptitud_combinada[i] for i in indices_unicos]
 
-        mejor_indice = np.argmax(aptitud_unica) if args.maximizar else np.argmin(aptitud_unica)
+        mejor_indice = np.argmin(aptitud_unica) if args.minimizar else np.argmax(aptitud_unica)
         mejor_individuo = poblacion_unica[mejor_indice]
 
-        mejor_aptitud_hist.append(max(aptitud_unica))
-        peor_aptitud_hist.append(min(aptitud_unica))
-        promedio_aptitud_hist.append(np.mean(aptitud_unica))
+        # Guardar estadísticas antes de podar
+        mejor_aptitud_hist.append(min(aptitud_unica) if args.minimizar else max(aptitud_unica))
+        peor_aptitud_hist.append(max(aptitud_unica) if args.minimizar else min(aptitud_unica))
+        promedio_aptitud_hist.append(np.mean(aptitud_unica) if args.minimizar else np.mean(aptitud_unica))
 
-        guardar_grafica(generacion, poblacion_unica, aptitud_unica, args.x_min, args.x_max, args.directorio_graficas)
+        guardar_grafica(generacion, poblacion_unica, aptitud_unica, args.x_min, args.x_max, args.directorio_graficas, args.minimizar)
 
         poblacion, aptitud = podar_poblacion(poblacion_unica, aptitud_unica, args.tam_poblacion, mejor_individuo)
 
         mejor_x = binario_a_decimal(mejor_individuo, args.x_min, args.x_max)
         print(f"Generación {generacion + 1}: Mejor individuo = {mejor_individuo}, Índice = {mejor_indice}, x = {mejor_x}, Aptitud = {aptitud_unica[mejor_indice]}")
 
-    print("Optimización finalizada.")
+    print("Optimización completada.")
 
     generaciones = list(range(1, args.generaciones + 1))
     plt.figure(figsize=(10, 6))
     plt.plot(generaciones, mejor_aptitud_hist, label='Mejor Aptitud')
     plt.plot(generaciones, peor_aptitud_hist, label='Peor Aptitud')
-    plt.plot(generaciones, promedio_aptitud_hist, label='Promedio Aptitud')
+    plt.plot(generaciones, promedio_aptitud_hist, label='Aptitud Promedio')
     plt.xlabel('Generaciones')
     plt.ylabel('Aptitud')
     plt.title('Evolución de la Aptitud de la Población')
