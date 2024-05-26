@@ -16,7 +16,6 @@ def ejecutar_algoritmo():
     mejor_solucion = algoritmo_genetico(dto)
     resultado.set(f"La mejor solución es: {mejor_solucion:.2f} con valor: {funcion_fitness(mejor_solucion):.2f}")
 
-# Configuración de la interfaz gráfica
 root = tk.Tk()
 root.title("Algoritmo Genético")
 
