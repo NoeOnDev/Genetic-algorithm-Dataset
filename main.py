@@ -6,13 +6,13 @@ import numpy as np
 dataset = pd.read_excel('2024.05.22 dataset 8A.xlsx')
 
 # Aquí almaceno las variables de entrada para cada fila
-x1 = dataset['x1'].tolist() # Convierto la columna x1 en una lista 31 elementos
-x2 = dataset['x2'].tolist() # Convierto la columna x2 en una lista 31 elementos
-x3 = dataset['x3'].tolist() # Convierto la columna x3 en una lista 31 elementos
-x4 = dataset['x4'].tolist() # Convierto la columna x4 en una lista 31 elementos
+x1 = dataset['x1'].tolist() # Convierto la columna x1 en una lista (31 elementos)
+x2 = dataset['x2'].tolist() # Convierto la columna x2 en una lista (31 elementos)
+x3 = dataset['x3'].tolist() # Convierto la columna x3 en una lista (31 elementos)
+x4 = dataset['x4'].tolist() # Convierto la columna x4 en una lista (31 elementos)
 
 # Aquí almaceno la "y" deseada para cada fila
-yd = dataset['y'].tolist()
+yd = dataset['y'].tolist() # Convierto la columna y en una lista (31 elementos)
 
 def generar_constantes(min_rango=0.0, max_rango=1.0):
     return [round(random.uniform(min_rango, max_rango), 2) for i in range(5)]
@@ -26,4 +26,3 @@ def calcular_error(y_deseada, y_calculada):
 
 def calcular_norma_error(error):
      return round(np.linalg.norm(error), 2)
- 
