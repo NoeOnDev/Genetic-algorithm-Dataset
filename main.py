@@ -35,10 +35,10 @@ def calcular_norma_error(error):
 def algoritmo_genetico():
     probabilidad_mutacion_individual = float(p_mutacion.get())
     probabilidad_mutacion_gen = float(p_mutaciong.get())
-    tgeneraciones = int(n_generaciones.get())
-    max_poblacion = int(poblacion_maxima.get())
-    min_poblacion = int(poblacion_minima.get())
-    individuos_iniciales = random.randint(min_poblacion, max_poblacion)
+    cantidad_generaciones = int(n_generaciones.get())
+    poblacion_maxima = int(poblacion_max.get())
+    poblacion_minima = int(poblacion_min.get())
+    individuos_iniciales = random.randint(poblacion_minima, poblacion_maxima)
     poblacion = []
     generaciones = []
     mejores = []
@@ -49,7 +49,7 @@ def algoritmo_genetico():
     for _ in range(individuos_iniciales):
         poblacion.append(generar_constantes())
 
-    for gen in range(tgeneraciones):
+    for gen in range(cantidad_generaciones):
         ysc = [calcular_y_deseada(x1, x2, x3, x4, individuo) for individuo in poblacion]
         fitnes = [calcular_norma_error(calcular_error(yd, yc)) for yc in ysc]
         mejor_fitnes = min(fitnes)
@@ -67,12 +67,12 @@ def algoritmo_genetico():
             for pareja2 in parejas:
                 hijo1, hijo2 = cruza(pareja1, pareja2)
                 nueva_poblacion.append(definir_mutacion(hijo1, probabilidad_mutacion_individual, probabilidad_mutacion_gen))
-                if len(nueva_poblacion) < max_poblacion:
+                if len(nueva_poblacion) < poblacion_maxima:
                     nueva_poblacion.append(definir_mutacion(hijo2, probabilidad_mutacion_individual, probabilidad_mutacion_gen))
         
         promedio_errores.append(round(sum(fitnes) / len(fitnes), 2))
         peores.append(max(fitnes))
-        poblacion = podar(nueva_poblacion, max_poblacion)
+        poblacion = podar(nueva_poblacion, poblacion_maxima)
         generaciones.append(poblacion)
 
     mostrar_tabla(mejores)
@@ -188,8 +188,8 @@ def definir_mutacion(hijo, probabilidad_mutacion_individual, probabilidad_mutaci
         hijo = mutacion(hijo, probabilidad_mutacion_gen)
     return hijo
 
-def podar(poblacion, max_individuos):
-    return poblacion[:max_individuos]
+def podar(poblacion, poblacion_maxima):
+    return poblacion[:poblacion_maxima]
 
 def generar_parejas(poblacion):
     parejas_cruce = []
@@ -200,7 +200,7 @@ def generar_parejas(poblacion):
     return parejas_cruce
 
 def mostrar_ventana():
-    global ventana, p_mutacion, p_mutaciong, n_generaciones, poblacion_maxima, poblacion_minima, treeview
+    global ventana, p_mutacion, p_mutaciong, n_generaciones, poblacion_max, poblacion_min, treeview
     ventana = Tk()
     ventana.title("Ingrese valores")
     
