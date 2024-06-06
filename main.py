@@ -125,7 +125,7 @@ def crear_graficas_constante(a, b, c, d, e):
         plt.plot(x, d, color='gray', label='D')
         plt.scatter(x, e, color='black', label='')
         plt.plot(x, e, color='black', label='E')
-        plt.title('Evolución de las constantes')
+        plt.title('Evolución de los parámetros')
         plt.xlabel('Generación')
         plt.ylabel('Valor constante')
         plt.grid(True)
