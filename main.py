@@ -172,12 +172,12 @@ def cruza(pareja1, pareja2):
     hijo2 = pareja2[:posicion] + pareja1[posicion:]
     return hijo1, hijo2
 
-def mutacion(individuo, pmutacion):
+def mutacion(individuo, probabilidad_mutacion_gen):
     nuevo = individuo.copy()
     muto = False
     while not muto:
         for i, constante in enumerate(nuevo):
-            if random.random() < pmutacion:
+            if random.random() < probabilidad_mutacion_gen:
                 nuevo[i] = round(constante * (1 + np.random.normal(0, 0.4)), 2)
                 muto = True
     return nuevo
