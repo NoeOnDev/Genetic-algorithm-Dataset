@@ -7,21 +7,20 @@ import cv2
 import matplotlib.pyplot as plt
 from tkinter import Tk, Label, Entry, Button, ttk
 
-# Aquí cargo el dataset
+# Cargar el dataset
 dataset = pd.read_excel('2024.05.22 dataset 8A.xlsx')
 
-# Aquí almaceno las variables de entrada para cada fila
-x1 = dataset['x1'].tolist() # Convierto la columna x1 en una lista (31 elementos)
-x2 = dataset['x2'].tolist() # Convierto la columna x2 en una lista (31 elementos)
-x3 = dataset['x3'].tolist() # Convierto la columna x3 en una lista (31 elementos)
-x4 = dataset['x4'].tolist() # Convierto la columna x4 en una lista (31 elementos)
+# Almacenar las variables de entrada y la "y" deseada para cada fila
+x1 = dataset['x1'].tolist()
+x2 = dataset['x2'].tolist()
+x3 = dataset['x3'].tolist()
+x4 = dataset['x4'].tolist()
+yd = dataset['y'].tolist()
 
-# Aquí almaceno la "y" deseada para cada fila
-yd = dataset['y'].tolist() # Convierto la columna y en una lista (31 elementos)
-
+# Funciones auxiliares
 def generar_constantes(min_rango=0.0, max_rango=1.0):
     return [round(random.uniform(min_rango, max_rango), 2) for i in range(5)]
-    
+
 def calcular_y_deseada(x1, x2, x3, x4, constantes):
     a, b, c, d, e = constantes
     return [round(a + b*x1[i] + c*x2[i] + d*x3[i] + e*x4[i], 2) for i in range(len(x1))]
@@ -32,6 +31,7 @@ def calcular_error(y_deseada, y_calculada):
 def calcular_norma_error(error):
     return round(np.linalg.norm(error), 2)
 
+# Algoritmo Genético
 def algoritmo_genetico():
     probabilidad_mutacion_individual = float(p_mutacion.get())
     probabilidad_mutacion_gen = float(p_mutaciong.get())
@@ -39,15 +39,13 @@ def algoritmo_genetico():
     poblacion_maxima = int(poblacion_max.get())
     poblacion_minima = int(poblacion_min.get())
     individuos_iniciales = random.randint(poblacion_minima, poblacion_maxima)
-    poblacion = []
+    
+    poblacion = [generar_constantes() for _ in range(individuos_iniciales)]
     generaciones = []
     mejores = []
     errores_menores = []
     promedio_errores = []
     peores = []
-    
-    for _ in range(individuos_iniciales):
-        poblacion.append(generar_constantes())
 
     for gen in range(cantidad_generaciones):
         ysc = [calcular_y_deseada(x1, x2, x3, x4, individuo) for individuo in poblacion]
@@ -55,21 +53,19 @@ def algoritmo_genetico():
         mejor_fitnes = min(fitnes)
         mejor_individuo = poblacion[fitnes.index(mejor_fitnes)]
         errores_menores.append(mejor_fitnes)
-        mejores.append({'fitness': mejor_fitnes,
-                        'error': errores_menores[-1],
-                        'constantes': mejor_individuo, 'Generacion': gen + 1})
+        mejores.append({'fitness': mejor_fitnes, 'error': errores_menores[-1], 'constantes': mejor_individuo, 'Generacion': gen + 1})
 
         crear_grafica(yd, calcular_y_deseada(x1, x2, x3, x4, mejor_individuo), gen + 1)
         cruces = generar_parejas(poblacion)
         nueva_poblacion = [mejor_individuo]
-        
+
         for pareja1, parejas in cruces:
             for pareja2 in parejas:
                 hijo1, hijo2 = cruza(pareja1, pareja2)
                 nueva_poblacion.append(definir_mutacion(hijo1, probabilidad_mutacion_individual, probabilidad_mutacion_gen))
                 if len(nueva_poblacion) < poblacion_maxima:
                     nueva_poblacion.append(definir_mutacion(hijo2, probabilidad_mutacion_individual, probabilidad_mutacion_gen))
-        
+
         promedio_errores.append(round(sum(fitnes) / len(fitnes), 2))
         peores.append(max(fitnes))
         poblacion = podar(nueva_poblacion, poblacion_maxima)
@@ -81,6 +77,7 @@ def algoritmo_genetico():
     crear_graficas_constante(a, b, c, d, e)
     crear_video()
 
+# Funciones para gráficos y video
 def crear_video():
     img_dir = "imagenes_graficas_generadas"
     video_dir = "video_generado"
@@ -100,7 +97,6 @@ def crear_video():
 
     cv2.destroyAllWindows()
     video.release()
-
 
 def crear_grafica_error(norm_errores, promedio_errores, peores):
     plt.figure(figsize=(10, 10))
@@ -135,16 +131,16 @@ def crear_graficas_constante(a, b, c, d, e):
         filename = f"{img_dir}/constantes.png"
         plt.savefig(filename)
         plt.show()
-    
+
     save_plots(a, b, c, d, e)
-    
+
 def generar_nombre_archivo_generacion(num_generacion):
     return f"generation_{num_generacion:03d}.png"
 
 def crear_grafica(yd, fx, i):
     img_dir = "imagenes_graficas_generadas"
     os.makedirs(img_dir, exist_ok=True)
-    
+
     plt.figure(figsize=(10, 10))
     plt.plot(fx, color='green', label='Resultado obtenido')
     plt.plot(yd, color='black', label='Resultado deseado')
@@ -164,9 +160,9 @@ def mostrar_tabla(mejores):
     for item in treeview.get_children():
         treeview.delete(item)
     for mejor in mejores:
-        treeview.insert("", "end", values=(mejor['fitness'], mejor['Generacion'], mejor['error'], 
-                                           ':'.join(map(str, mejor['constantes']))))
+        treeview.insert("", "end", values=(mejor['fitness'], mejor['Generacion'], mejor['error'], ':'.join(map(str, mejor['constantes']))))
 
+# Funciones genéticas
 def cruza(pareja1, pareja2):
     posicion = random.randint(1, len(pareja1) - 1)
     hijo1 = pareja1[:posicion] + pareja2[posicion:]
@@ -199,11 +195,12 @@ def generar_parejas(poblacion):
         parejas_cruce.append((poblacion[i], parejas))
     return parejas_cruce
 
+# Interfaz gráfica
 def mostrar_ventana():
     global ventana, p_mutacion, p_mutaciong, n_generaciones, poblacion_max, poblacion_min, treeview
     ventana = Tk()
     ventana.title("Ingrese valores")
-    
+
     Label(ventana, text="Población mínima:").grid(row=1, column=0)
     Label(ventana, text="Población máxima:").grid(row=2, column=0)
     Label(ventana, text="Valor de probabilidad de mutación del individuo:").grid(row=3, column=0)
@@ -215,7 +212,7 @@ def mostrar_ventana():
     p_mutacion = Entry(ventana)
     p_mutaciong = Entry(ventana)
     n_generaciones = Entry(ventana)
-    
+
     poblacion_minima.grid(row=1, column=1)
     poblacion_maxima.grid(row=2, column=1)
     p_mutacion.grid(row=3, column=1)
@@ -223,7 +220,7 @@ def mostrar_ventana():
     n_generaciones.grid(row=5, column=1)
 
     Button(ventana, text="Aceptar", command=algoritmo_genetico).grid(row=6, column=0, columnspan=3)
-    
+
     treeview = ttk.Treeview(ventana, columns=("Fitness", "Generación", "Error", "Constantes"), show="headings")
     treeview.heading("Fitness", text="Fitness")
     treeview.heading("Generación", text='Generación')
@@ -233,4 +230,5 @@ def mostrar_ventana():
 
     ventana.mainloop()
 
+# Iniciar la interfaz gráfica
 mostrar_ventana()
