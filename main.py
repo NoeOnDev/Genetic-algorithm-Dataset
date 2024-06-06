@@ -32,9 +32,9 @@ def calcular_error(y_deseada, y_calculada):
 def calcular_norma_error(error):
     return round(np.linalg.norm(error), 2)
 
-def prinsipal():
-    pmutacion = float(p_mutacion.get())
-    pmutaciong = float(p_mutaciong.get())
+def algoritmo_genetico():
+    probabilidad_mutacion_individual = float(p_mutacion.get())
+    probabilidad_mutacion_gen = float(p_mutaciong.get())
     tgeneraciones = int(n_generaciones.get())
     max_poblacion = int(poblacion_maxima.get())
     min_poblacion = int(poblacion_minima.get())
@@ -66,9 +66,9 @@ def prinsipal():
         for pareja1, parejas in cruces:
             for pareja2 in parejas:
                 hijo1, hijo2 = cruza(pareja1, pareja2)
-                nueva_poblacion.append(definir_mutacion(hijo1, pmutacion, pmutaciong))
+                nueva_poblacion.append(definir_mutacion(hijo1, probabilidad_mutacion_individual, probabilidad_mutacion_gen))
                 if len(nueva_poblacion) < max_poblacion:
-                    nueva_poblacion.append(definir_mutacion(hijo2, pmutacion, pmutaciong))
+                    nueva_poblacion.append(definir_mutacion(hijo2, probabilidad_mutacion_individual, probabilidad_mutacion_gen))
         
         promedio_errores.append(round(sum(fitnes) / len(fitnes), 2))
         peores.append(max(fitnes))
@@ -121,12 +121,12 @@ def crear_graficas_constante(a, b, c, d, e):
 
     def save_plots(a, b, c, d, e):
         x = range(len(a))
-        plt.figure(figsize=(8, 6))
+        plt.figure(figsize=(10, 10))
         plt.plot(x, a, color='blue', label='A')
-        plt.plot(x, b, color='red', label='B')
-        plt.plot(x, c, color='green', label='C')
-        plt.plot(x, d, color='black', label='D')
-        plt.plot(x, e, color='skyblue', label='E')
+        plt.plot(x, b, color='green', label='B')
+        plt.plot(x, c, color='red', label='C')
+        plt.plot(x, d, color='gray', label='D')
+        plt.plot(x, e, color='black', label='E')
         plt.title('Constantes')
         plt.xlabel('Generación')
         plt.ylabel('Valor constante')
@@ -145,12 +145,13 @@ def crear_grafica(yd, fx, i):
     img_dir = "imagenes_graficas_generadas"
     os.makedirs(img_dir, exist_ok=True)
     
-    plt.plot(fx, color='red', label='Resultado obtenido')
-    plt.plot(yd, label='Resultado esperado')
-    plt.scatter(range(len(fx)), fx, color='red', s=100, label='Resultado obtenidos')
-    plt.scatter(range(len(yd)), yd, color='blue', s=20, label='Resultado deseados')
+    plt.figure(figsize=(10, 10))
+    plt.plot(fx, color='green', label='Resultado obtenido')
+    plt.plot(yd, color='black', label='Resultado deseado')
+    plt.scatter(range(len(fx)), fx, color='green', s=100, label='Resultados obtenidos')
+    plt.scatter(range(len(yd)), yd, color='black', s=20, label='Resultados deseados')
     plt.title(f'Generación {i}')
-    plt.xlabel('Numero de generación')
+    plt.xlabel('Cantidad de generaciones')
     plt.ylabel('Y')
     plt.grid(True)
     plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=4)
@@ -182,9 +183,9 @@ def mutacion(individuo, pmutacion):
                 muto = True
     return nuevo
 
-def definir_mutacion(hijo, probabilidad_mutacioni, probabilidad_mutaciong):
-    if random.random() < probabilidad_mutacioni:
-        hijo = mutacion(hijo, probabilidad_mutaciong)
+def definir_mutacion(hijo, probabilidad_mutacion_individual, probabilidad_mutacion_gen):
+    if random.random() < probabilidad_mutacion_individual:
+        hijo = mutacion(hijo, probabilidad_mutacion_gen)
     return hijo
 
 def podar(poblacion, max_individuos):
@@ -221,7 +222,7 @@ def mostrar_ventana():
     p_mutaciong.grid(row=4, column=1)
     n_generaciones.grid(row=5, column=1)
 
-    Button(ventana, text="Aceptar", command=prinsipal).grid(row=6, column=0, columnspan=3)
+    Button(ventana, text="Aceptar", command=algoritmo_genetico).grid(row=6, column=0, columnspan=3)
     
     treeview = ttk.Treeview(ventana, columns=("Fitness", "Generación", "Error", "Constantes"), show="headings")
     treeview.heading("Fitness", text="Fitness")
