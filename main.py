@@ -7,17 +7,14 @@ import cv2
 import matplotlib.pyplot as plt
 from tkinter import Tk, Label, Entry, Button, ttk
 
-# Cargar el dataset
 dataset = pd.read_excel('2024.05.22 dataset 8A.xlsx')
 
-# Almacenar las variables de entrada y la "y" deseada para cada fila
 x1 = dataset['x1'].tolist()
 x2 = dataset['x2'].tolist()
 x3 = dataset['x3'].tolist()
 x4 = dataset['x4'].tolist()
 yd = dataset['y'].tolist()
 
-# Funciones auxiliares
 def generar_constantes(min_rango=0.0, max_rango=1.0):
     return [round(random.uniform(min_rango, max_rango), 2) for i in range(5)]
 
@@ -201,33 +198,41 @@ def mostrar_ventana():
     ventana = Tk()
     ventana.title("Ingrese valores")
 
-    Label(ventana, text="Población mínima:").grid(row=1, column=0)
-    Label(ventana, text="Población máxima:").grid(row=2, column=0)
-    Label(ventana, text="Valor de probabilidad de mutación del individuo:").grid(row=3, column=0)
-    Label(ventana, text="Valor de probabilidad de mutación del gen:").grid(row=4, column=0)
-    Label(ventana, text="Generaciones:").grid(row=5, column=0)
+    estilo = ttk.Style()
+    estilo.configure("TLabel", font=("Arial", 14))
+    estilo.configure("TButton", font=("Arial", 14))
+    estilo.configure("TEntry", font=("Arial", 14))
+    estilo.configure("Treeview.Heading", font=("Arial", 14, "bold"))
+    estilo.configure("Treeview", font=("Arial", 12))
 
-    poblacion_minima = Entry(ventana)
-    poblacion_maxima = Entry(ventana)
-    p_mutacion = Entry(ventana)
-    p_mutaciong = Entry(ventana)
-    n_generaciones = Entry(ventana)
+    Label(ventana, text="Población mínima:", font=("Arial", 14)).grid(row=1, column=0, padx=10, pady=10)
+    Label(ventana, text="Población máxima:", font=("Arial", 14)).grid(row=2, column=0, padx=10, pady=10)
+    Label(ventana, text="Probabilidad de mutación del individuo:", font=("Arial", 14)).grid(row=3, column=0, padx=10, pady=10)
+    Label(ventana, text="Probabilidad de mutación del gen:", font=("Arial", 14)).grid(row=4, column=0, padx=10, pady=10)
+    Label(ventana, text="Generaciones:", font=("Arial", 14)).grid(row=5, column=0, padx=10, pady=10)
 
-    poblacion_minima.grid(row=1, column=1)
-    poblacion_maxima.grid(row=2, column=1)
-    p_mutacion.grid(row=3, column=1)
-    p_mutaciong.grid(row=4, column=1)
-    n_generaciones.grid(row=5, column=1)
+    poblacion_min = Entry(ventana, font=("Arial", 14))
+    poblacion_max = Entry(ventana, font=("Arial", 14))
+    p_mutacion = Entry(ventana, font=("Arial", 14))
+    p_mutaciong = Entry(ventana, font=("Arial", 14))
+    n_generaciones = Entry(ventana, font=("Arial", 14))
 
-    Button(ventana, text="Aceptar", command=algoritmo_genetico).grid(row=6, column=0, columnspan=3)
+    poblacion_min.grid(row=1, column=1, padx=10, pady=10)
+    poblacion_max.grid(row=2, column=1, padx=10, pady=10)
+    p_mutacion.grid(row=3, column=1, padx=10, pady=10)
+    p_mutaciong.grid(row=4, column=1, padx=10, pady=10)
+    n_generaciones.grid(row=5, column=1, padx=10, pady=10)
+
+    Button(ventana, text="Iniciar", command=algoritmo_genetico, font=("Arial", 14)).grid(row=6, column=0, columnspan=3, pady=20)
 
     treeview = ttk.Treeview(ventana, columns=("Fitness", "Generación", "Error", "Constantes"), show="headings")
     treeview.heading("Fitness", text="Fitness")
     treeview.heading("Generación", text='Generación')
     treeview.heading("Error", text="Error")
     treeview.heading("Constantes", text="Constantes")
-    treeview.grid(row=7, column=0, columnspan=3)
+    treeview.grid(row=7, column=0, columnspan=3, padx=0)
 
+    ventana.geometry("801x550")
     ventana.mainloop()
 
 # Iniciar la interfaz gráfica
