@@ -16,17 +16,17 @@ x4 = dataset['x4'].tolist()
 yd = dataset['y'].tolist()
 
 def generar_constantes(min_rango=0.0, max_rango=1.0):
-    return [round(random.uniform(min_rango, max_rango), 2) for i in range(5)]
+    return [random.uniform(min_rango, max_rango) for _ in range(5)]
 
 def calcular_y_deseada(x1, x2, x3, x4, constantes):
     a, b, c, d, e = constantes
-    return [round(a + b*x1[i] + c*x2[i] + d*x3[i] + e*x4[i], 2) for i in range(len(x1))]
+    return [a + b*x1[i] + c*x2[i] + d*x3[i] + e*x4[i] for i in range(len(x1))]
 
 def calcular_error(y_deseada, y_calculada):
     return [abs(y_deseada[i] - y_calculada[i]) for i in range(len(y_deseada))]
 
 def calcular_norma_error(error):
-    return round(np.linalg.norm(error), 2)
+    return np.linalg.norm(error)
 
 # Algoritmo Genético
 def algoritmo_genetico():
@@ -37,7 +37,7 @@ def algoritmo_genetico():
     poblacion_minima = int(poblacion_min.get())
     individuos_iniciales = random.randint(poblacion_minima, poblacion_maxima)
     
-    poblacion = [generar_constantes() for _ in range(individuos_iniciales)]
+    poblacion = [generar_constantes(-10, 5) for _ in range(individuos_iniciales)]
     generaciones = []
     mejores = []
     errores_menores = []
@@ -178,7 +178,7 @@ def mutacion(individuo, probabilidad_mutacion_gen):
     while not muto:
         for i, constante in enumerate(nuevo):
             if random.random() < probabilidad_mutacion_gen:
-                nuevo[i] = round(constante * (1 + np.random.normal(0, 0.4)), 2)
+                nuevo[i] = constante * (1.0 + random.uniform(-100, 100) / 1000)
                 muto = True
     return nuevo
 
@@ -231,14 +231,14 @@ def mostrar_ventana():
 
     Button(ventana, text="Iniciar", command=algoritmo_genetico, font=("Arial", 14)).grid(row=6, column=0, columnspan=3, pady=20)
 
-    treeview = ttk.Treeview(ventana, columns=("Fitness", "Generación", "Error", "Constantes"), show="headings")
+    treeview = ttk.Treeview(ventana, columns=("Fitness", "Generación", "Error", "Constantes"), show="headings", height=10, selectmode="browse")
     treeview.heading("Fitness", text="Fitness")
     treeview.heading("Generación", text='Generación')
     treeview.heading("Error", text="Error")
     treeview.heading("Constantes", text="Constantes")
     treeview.grid(row=7, column=0, columnspan=3, padx=0)
 
-    ventana.geometry("801x550")
+    ventana.geometry("1200x600")
     ventana.mainloop()
 
 # Iniciar la interfaz gráfica
