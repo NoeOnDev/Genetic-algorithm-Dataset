@@ -74,6 +74,45 @@ def algoritmo_genetico():
     crear_graficas_constante(a, b, c, d, e)
     crear_video()
 
+# Funciones genéticas
+def cruza(pareja1, pareja2):
+    posicion = random.randint(1, len(pareja1) - 1)
+    hijo1 = pareja1[:posicion] + pareja2[posicion:]
+    hijo2 = pareja2[:posicion] + pareja1[posicion:]
+    return hijo1, hijo2
+
+def mutacion(individuo, probabilidad_mutacion_gen):
+    nuevo = individuo.copy()
+    muto = False
+    while not muto:
+        for i, constante in enumerate(nuevo):
+            if random.random() < probabilidad_mutacion_gen:
+                nuevo[i] = constante * (1.0 + random.uniform(-100, 100) / 1000)
+                muto = True
+    return nuevo
+
+def definir_mutacion(hijo, probabilidad_mutacion_individual, probabilidad_mutacion_gen):
+    if random.random() < probabilidad_mutacion_individual:
+        hijo = mutacion(hijo, probabilidad_mutacion_gen)
+    return hijo
+
+def podar(poblacion, poblacion_maxima):
+    return poblacion[:poblacion_maxima]
+
+def generar_parejas(poblacion):
+    parejas_cruce = []
+    for i in range(len(poblacion)):
+        cantidad_parejas = random.randint(1, len(poblacion) - 1)
+        parejas = random.sample(poblacion[:i] + poblacion[i + 1:], cantidad_parejas)
+        parejas_cruce.append((poblacion[i], parejas))
+    return parejas_cruce
+
+def mostrar_tabla(mejores):
+    for item in treeview.get_children():
+        treeview.delete(item)
+    for mejor in mejores:
+        treeview.insert("", "end", values=(mejor['fitness'], mejor['Generacion'], mejor['error'], ':'.join(map(str, mejor['constantes']))))
+
 # Funciones para gráficos y video
 def crear_video():
     img_dir = "imagenes_graficas_generadas"
@@ -87,7 +126,7 @@ def crear_video():
     frame = cv2.imread(os.path.join(img_dir, images[0]))
     height, width, layers = frame.shape
 
-    video = cv2.VideoWriter(video_filename, cv2.VideoWriter_fourcc(*'mp4v'), 1, (width, height))
+    video = cv2.VideoWriter(video_filename, cv2.VideoWriter_fourcc(*'mp4v'), 3, (width, height))
 
     for image in images:
         video.write(cv2.imread(os.path.join(img_dir, image)))
@@ -158,45 +197,6 @@ def crear_grafica(yd, fx, i):
     filename = os.path.join(img_dir, generar_nombre_archivo_generacion(i))
     plt.savefig(filename)
     plt.close()
-
-def mostrar_tabla(mejores):
-    for item in treeview.get_children():
-        treeview.delete(item)
-    for mejor in mejores:
-        treeview.insert("", "end", values=(mejor['fitness'], mejor['Generacion'], mejor['error'], ':'.join(map(str, mejor['constantes']))))
-
-# Funciones genéticas
-def cruza(pareja1, pareja2):
-    posicion = random.randint(1, len(pareja1) - 1)
-    hijo1 = pareja1[:posicion] + pareja2[posicion:]
-    hijo2 = pareja2[:posicion] + pareja1[posicion:]
-    return hijo1, hijo2
-
-def mutacion(individuo, probabilidad_mutacion_gen):
-    nuevo = individuo.copy()
-    muto = False
-    while not muto:
-        for i, constante in enumerate(nuevo):
-            if random.random() < probabilidad_mutacion_gen:
-                nuevo[i] = constante * (1.0 + random.uniform(-100, 100) / 1000)
-                muto = True
-    return nuevo
-
-def definir_mutacion(hijo, probabilidad_mutacion_individual, probabilidad_mutacion_gen):
-    if random.random() < probabilidad_mutacion_individual:
-        hijo = mutacion(hijo, probabilidad_mutacion_gen)
-    return hijo
-
-def podar(poblacion, poblacion_maxima):
-    return poblacion[:poblacion_maxima]
-
-def generar_parejas(poblacion):
-    parejas_cruce = []
-    for i in range(len(poblacion)):
-        cantidad_parejas = random.randint(1, len(poblacion) - 1)
-        parejas = random.sample(poblacion[:i] + poblacion[i + 1:], cantidad_parejas)
-        parejas_cruce.append((poblacion[i], parejas))
-    return parejas_cruce
 
 # Interfaz gráfica
 def mostrar_ventana():
