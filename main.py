@@ -15,7 +15,7 @@ x3 = dataset['x3'].tolist()
 x4 = dataset['x4'].tolist()
 yd = dataset['y'].tolist()
 
-def generar_constantes(min_rango=0.0, max_rango=1.0):
+def generar_constantes(min_rango=-5, max_rango=5):
     return [random.uniform(min_rango, max_rango) for _ in range(5)]
 
 def calcular_y_deseada(x1, x2, x3, x4, constantes):
@@ -37,7 +37,7 @@ def algoritmo_genetico():
     poblacion_minima = int(poblacion_min.get())
     individuos_iniciales = random.randint(poblacion_minima, poblacion_maxima)
     
-    poblacion = [generar_constantes(-10, 5) for _ in range(individuos_iniciales)]
+    poblacion = [generar_constantes() for _ in range(individuos_iniciales)]
     generaciones = []
     mejores = []
     errores_menores = []
@@ -238,7 +238,7 @@ def mostrar_ventana():
     treeview.heading("Constantes", text="Constantes")
     treeview.grid(row=7, column=0, columnspan=3, padx=0)
 
-    ventana.geometry("1200x600")
+    ventana.geometry("801x600")
     ventana.mainloop()
 
 # Iniciar la interfaz gráfica
