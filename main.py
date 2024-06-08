@@ -135,17 +135,25 @@ def crear_video():
     video.release()
 
 def crear_grafica_error(norm_errores, promedio_errores, peores):
-    plt.figure(figsize=(12, 8))
-    plt.plot(norm_errores, color='blue', label='Mejores de cada generacion')
-    plt.plot(promedio_errores, color='black', label='Promedio de cada generacion')
-    plt.plot(peores, color='red', label='Peores de cada generacion')
-    plt.title('Evolución de las aptitudes de la población')
-    plt.xlabel('Generación')
-    plt.ylabel('Aptitud de la población')
-    plt.grid(True)
-    plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=1)
-    plt.tight_layout()
-    plt.show()
+    img_dir = "imagen_errores"
+    os.makedirs(img_dir, exist_ok=True)
+    
+    def save_plots(norm_errores, promedio_errores, peores):
+        plt.figure(figsize=(12, 8))
+        plt.plot(norm_errores, color='blue', label='Mejores de cada generacion')
+        plt.plot(promedio_errores, color='black', label='Promedio de cada generacion')
+        plt.plot(peores, color='red', label='Peores de cada generacion')
+        plt.title('Evolución de las aptitudes de la población')
+        plt.xlabel('Generación')
+        plt.ylabel('Aptitud de la población')
+        plt.grid(True)
+        plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=1)
+        plt.tight_layout()
+        filename = os.path.join(img_dir, 'errores.png')
+        plt.savefig(filename)
+        plt.show()
+    
+    save_plots(norm_errores, promedio_errores, peores)
 
 def crear_graficas_constante(a, b, c, d, e):
     img_dir = "imagen_constantes"
