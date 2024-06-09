@@ -15,7 +15,7 @@ x3 = dataset['x3'].tolist()
 x4 = dataset['x4'].tolist()
 yd = dataset['y'].tolist()
 
-def generar_constantes(min_rango=-5, max_rango=5):
+def generar_constantes(min_rango=-10, max_rango=10):
     return [random.uniform(min_rango, max_rango) for _ in range(5)]
 
 def calcular_y_deseada(x1, x2, x3, x4, constantes):
