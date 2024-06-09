@@ -249,5 +249,4 @@ def mostrar_ventana():
     ventana.geometry("801x600")
     ventana.mainloop()
 
-# Iniciar la interfaz gráfica
 mostrar_ventana()
