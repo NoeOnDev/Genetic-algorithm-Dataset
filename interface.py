@@ -5,7 +5,7 @@ def mostrar_tabla(mejores):
     for item in treeview.get_children():
         treeview.delete(item)
     for mejor in mejores:
-        treeview.insert("", "end", values=(mejor['Generacion'], mejor['fitness'], mejor['error'], ':'.join(map(str, mejor['constantes']))))
+        treeview.insert("", "end", values=(mejor['Generacion'], mejor['error'], ':'.join(map(str, mejor['constantes']))))
 
 def iniciar_algoritmo():
     algoritmo_genetico(p_mutacion.get(), p_mutaciong.get(), n_generaciones.get(), poblacion_max.get(), poblacion_min.get(), mostrar_tabla)
@@ -42,18 +42,16 @@ def mostrar_ventana():
 
     Button(ventana, text="Iniciar", command=iniciar_algoritmo, font=("Arial", 14)).grid(row=6, column=0, columnspan=3, pady=20)
 
-    treeview = ttk.Treeview(ventana, columns=("Generación", "Fitness", "Error", "Constantes"), show="headings", height=20, selectmode="browse")
+    treeview = ttk.Treeview(ventana, columns=("Generación", "Error", "Constantes"), show="headings", height=20, selectmode="browse")
     treeview.heading("Generación", text='Generación')
-    treeview.heading("Fitness", text="Fitness")
     treeview.heading("Error", text="Error")
     treeview.heading("Constantes", text="Constantes")
     treeview.column("Generación", width=150)
-    treeview.column("Fitness", width=200)
     treeview.column("Error", width=200)
-    treeview.column("Constantes", width=800)
+    treeview.column("Constantes", width=830)
     treeview.grid(row=7, column=0, columnspan=3, padx=0, pady=20)
 
-    ventana.geometry("1350x765")
+    ventana.geometry("1182x765")
     ventana.mainloop()
 
 if __name__ == "__main__":

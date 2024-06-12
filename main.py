@@ -3,20 +3,21 @@ import random
 import numpy as np
 from graphics import crear_grafica, crear_grafica_error, crear_graficas_constante, crear_video
 
-dataset = pd.read_excel('2024.05.22 dataset 8A.xlsx')
+dataset = pd.read_excel('Dataset01.xlsx')
 
 x1 = dataset['x1'].tolist()
 x2 = dataset['x2'].tolist()
 x3 = dataset['x3'].tolist()
 x4 = dataset['x4'].tolist()
+x5 = dataset['x5'].tolist()
 yd = dataset['y'].tolist()
 
 def generar_constantes(min_rango=-4, max_rango=8.5):
-    return [random.uniform(min_rango, max_rango) for _ in range(5)]
+    return [random.uniform(min_rango, max_rango) for _ in range(6)]
 
-def calcular_y_deseada(x1, x2, x3, x4, constantes):
-    a, b, c, d, e = constantes
-    return [a + b*x1[i] + c*x2[i] + d*x3[i] + e*x4[i] for i in range(len(x1))]
+def calcular_y_deseada(x1, x2, x3, x4, x5, constantes):
+    a, b, c, d, e, f = constantes
+    return [a + b*x1[i] + c*x2[i] + d*x3[i] + e*x4[i] + f*x5[i] for i in range(len(x1))]
 
 def calcular_error(y_deseada, y_calculada):
     return [abs(y_deseada[i] - y_calculada[i]) for i in range(len(y_deseada))]
@@ -72,14 +73,14 @@ def algoritmo_genetico(p_mutacion, p_mutaciong, n_generaciones, poblacion_max, p
     peores = []
 
     for gen in range(cantidad_generaciones):
-        ysc = [calcular_y_deseada(x1, x2, x3, x4, individuo) for individuo in poblacion]
+        ysc = [calcular_y_deseada(x1, x2, x3, x4, x5, individuo) for individuo in poblacion]
         fitnes = [calcular_norma_error(calcular_error(yd, yc)) for yc in ysc]
         mejor_fitnes = min(fitnes)
         mejor_individuo = poblacion[fitnes.index(mejor_fitnes)]
         errores_menores.append(mejor_fitnes)
         mejores.append({'fitness': mejor_fitnes, 'error': errores_menores[-1], 'constantes': mejor_individuo, 'Generacion': gen + 1})
 
-        crear_grafica(yd, calcular_y_deseada(x1, x2, x3, x4, mejor_individuo), gen + 1)
+        crear_grafica(yd, calcular_y_deseada(x1, x2, x3, x4, x5, mejor_individuo), gen + 1)
         cruces = generar_parejas(poblacion)
         nueva_poblacion = [mejor_individuo]
 
@@ -97,6 +98,6 @@ def algoritmo_genetico(p_mutacion, p_mutaciong, n_generaciones, poblacion_max, p
 
     actualizar_tabla(mejores)
     crear_grafica_error(errores_menores, promedio_errores, peores)
-    a, b, c, d, e = zip(*[mejor['constantes'] for mejor in mejores])
-    crear_graficas_constante(a, b, c, d, e)
+    a, b, c, d, e, f = zip(*[mejor['constantes'] for mejor in mejores])
+    crear_graficas_constante(a, b, c, d, e, f)
     crear_video()

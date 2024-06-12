@@ -44,11 +44,11 @@ def crear_grafica_error(norm_errores, promedio_errores, peores):
     
     save_plots(norm_errores, promedio_errores, peores)
 
-def crear_graficas_constante(a, b, c, d, e):
+def crear_graficas_constante(a, b, c, d, e, f):
     img_dir = "imagen_constantes"
     os.makedirs(img_dir, exist_ok=True)
 
-    def save_plots(a, b, c, d, e):
+    def save_plots(a, b, c, d, e, f):
         x = range(len(a))
         plt.figure(figsize=(12, 8))
         plt.scatter(x, a, color='blue', label='')
@@ -61,6 +61,8 @@ def crear_graficas_constante(a, b, c, d, e):
         plt.plot(x, d, color='gray', label='D')
         plt.scatter(x, e, color='black', label='')
         plt.plot(x, e, color='black', label='E')
+        plt.scatter(x, f, color='blue', label='')
+        plt.plot(x, f, color='blue', label='F')
         plt.title('Evolución de los parámetros')
         plt.xlabel('Generación')
         plt.ylabel('Parámetros del mejor individuo')
@@ -71,7 +73,7 @@ def crear_graficas_constante(a, b, c, d, e):
         plt.savefig(filename)
         plt.show()
 
-    save_plots(a, b, c, d, e)
+    save_plots(a, b, c, d, e, f)
 
 def generar_nombre_archivo_generacion(num_generacion):
     return f"generation_{num_generacion:03d}.png"
