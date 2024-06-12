@@ -1,3 +1,4 @@
+# main.py
 import pandas as pd
 import random
 import numpy as np
@@ -96,7 +97,7 @@ def algoritmo_genetico(p_mutacion, p_mutaciong, n_generaciones, poblacion_max, p
         poblacion = podar(nueva_poblacion, poblacion_maxima)
         generaciones.append(poblacion)
 
-    actualizar_tabla(mejores)
+    actualizar_tabla([mejores[-1]])
     crear_grafica_error(errores_menores, promedio_errores, peores)
     a, b, c, d, e, f = zip(*[mejor['constantes'] for mejor in mejores])
     crear_graficas_constante(a, b, c, d, e, f)
