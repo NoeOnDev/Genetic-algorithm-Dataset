@@ -26,12 +26,14 @@ def calcular_error(y_deseada, y_calculada):
 def calcular_norma_error(error):
     return np.linalg.norm(error)
 
+# Selecciono un punto de cruzamiento y combino partes de dos individuos para crear dos nuevos individuos (hijos).
 def cruza(pareja1, pareja2):
     posicion = random.randint(1, len(pareja1) - 1)
     hijo1 = pareja1[:posicion] + pareja2[posicion:]
     hijo2 = pareja2[:posicion] + pareja1[posicion:]
     return hijo1, hijo2
 
+# Aplico mutacion a un individuo con una cierta probabilidad, alterando ligeramente una o mas de las constantes.
 def mutacion(individuo, probabilidad_mutacion_gen):
     nuevo = individuo.copy()
     muto = False
@@ -50,6 +52,7 @@ def definir_mutacion(hijo, probabilidad_mutacion_individual, probabilidad_mutaci
 def podar(poblacion, poblacion_maxima):
     return poblacion[:poblacion_maxima]
 
+# Aquí genero pares de individuos para el cruzamiento, seleccionando aleatoriamente parejas de la población.
 def generar_parejas(poblacion):
     parejas_cruce = []
     for i in range(len(poblacion)):
@@ -76,6 +79,8 @@ def algoritmo_genetico(p_mutacion, p_mutaciong, n_generaciones, poblacion_max, p
     for gen in range(cantidad_generaciones):
         ysc = [calcular_y_deseada(x1, x2, x3, x4, x5, individuo) for individuo in poblacion]
         fitnes = [calcular_norma_error(calcular_error(yd, yc)) for yc in ysc]
+        
+        # Guardar la información del mejor individuo de cada generación
         mejor_fitnes = min(fitnes)
         mejor_individuo = poblacion[fitnes.index(mejor_fitnes)]
         errores_menores.append(mejor_fitnes)
@@ -84,7 +89,8 @@ def algoritmo_genetico(p_mutacion, p_mutaciong, n_generaciones, poblacion_max, p
         crear_grafica(yd, calcular_y_deseada(x1, x2, x3, x4, x5, mejor_individuo), gen + 1)
         cruces = generar_parejas(poblacion)
         nueva_poblacion = [mejor_individuo]
-
+        
+        # Realizar cruzamientos y posibles mutaciones para crear nueva población
         for pareja1, parejas in cruces:
             for pareja2 in parejas:
                 hijo1, hijo2 = cruza(pareja1, pareja2)
@@ -94,11 +100,15 @@ def algoritmo_genetico(p_mutacion, p_mutaciong, n_generaciones, poblacion_max, p
 
         promedio_errores.append(round(sum(fitnes) / len(fitnes), 2))
         peores.append(max(fitnes))
+        
+        # Actualizar la población seleccionando los mejores individuos
         poblacion = podar(nueva_poblacion, poblacion_maxima)
         generaciones.append(poblacion)
 
+    # Crear gráficos y video final
     actualizar_tabla([mejores[-1]])
     crear_grafica_error(errores_menores, promedio_errores, peores)
     a, b, c, d, e, f = zip(*[mejor['constantes'] for mejor in mejores])
     crear_graficas_constante(a, b, c, d, e, f)
     crear_video()
+

@@ -1,0 +1,13 @@
+-Inicialización:
+Se establecen las probabilidades de mutación y el número de generaciones.
+Se crea una población inicial de individuos.
+-Evaluación:
+Se calcula el valor y para cada individuo en la población.
+Se calcula el error y la norma del error para cada individuo.
+Se identifica al mejor individuo de la generación actual.
+-Selección y Cruzamiento:
+Se generan pares de individuos para cruzamiento.
+Se realiza el cruzamiento y mutación para crear una nueva población.
+-Actualización de Población:
+Se actualiza la población seleccionando los mejores individuos.
+Se guarda la información del mejor individuo de cada generación.
