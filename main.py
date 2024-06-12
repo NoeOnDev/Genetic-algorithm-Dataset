@@ -15,7 +15,7 @@ x3 = dataset['x3'].tolist()
 x4 = dataset['x4'].tolist()
 yd = dataset['y'].tolist()
 
-def generar_constantes(min_rango=-10, max_rango=10):
+def generar_constantes(min_rango=-4, max_rango=8.5):
     return [random.uniform(min_rango, max_rango) for _ in range(5)]
 
 def calcular_y_deseada(x1, x2, x3, x4, constantes):
@@ -111,7 +111,7 @@ def mostrar_tabla(mejores):
     for item in treeview.get_children():
         treeview.delete(item)
     for mejor in mejores:
-        treeview.insert("", "end", values=(mejor['fitness'], mejor['Generacion'], mejor['error'], ':'.join(map(str, mejor['constantes']))))
+        treeview.insert("", "end", values=(mejor['Generacion'], mejor['fitness'], mejor['error'], ':'.join(map(str, mejor['constantes']))))
 
 # Funciones para gráficos y video
 def crear_video():
@@ -239,14 +239,18 @@ def mostrar_ventana():
 
     Button(ventana, text="Iniciar", command=algoritmo_genetico, font=("Arial", 14)).grid(row=6, column=0, columnspan=3, pady=20)
 
-    treeview = ttk.Treeview(ventana, columns=("Fitness", "Generación", "Error", "Constantes"), show="headings", height=10, selectmode="browse")
-    treeview.heading("Fitness", text="Fitness")
+    treeview = ttk.Treeview(ventana, columns=("Generación", "Fitness", "Error", "Constantes"), show="headings", height=20, selectmode="browse")
     treeview.heading("Generación", text='Generación')
+    treeview.heading("Fitness", text="Fitness")
     treeview.heading("Error", text="Error")
     treeview.heading("Constantes", text="Constantes")
-    treeview.grid(row=7, column=0, columnspan=3, padx=0)
+    treeview.column("Generación", width=150)
+    treeview.column("Fitness", width=200)
+    treeview.column("Error", width=200)
+    treeview.column("Constantes", width=800)
+    treeview.grid(row=7, column=0, columnspan=3, padx=0, pady=20)
 
-    ventana.geometry("801x600")
+    ventana.geometry("1350x765")
     ventana.mainloop()
 
 mostrar_ventana()
